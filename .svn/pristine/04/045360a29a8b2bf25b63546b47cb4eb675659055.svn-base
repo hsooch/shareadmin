@@ -1,0 +1,44 @@
+<div class="_popup _langko">
+	<div id="_wrap">
+		<div class="_popupInner">
+			<div class="_popHeader">
+				<span class="pop_Title">성적 일괄등록</span>
+				<a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+			</div>
+			<div class="_popContent">
+				<div class="popconBox">
+					<header id="_popupHeader">
+						<h1>성적 일괄등록</h1>
+					</header>
+					<div id="_articleContent" class="_articleContent">
+						<div class="_insert">
+		                    <div class="_popContent">
+		                        <p class="_popConLine">
+		                            <span class="_button _minimum _gray">
+		                            	<a href="javascript:void(0);" onclick="$(this).next().click();" class="tabInnBtn typeB">엑셀파일선택</a>
+										<input type="file" class="ng-hide" nv-file-select uploader="uploader" multiple/>
+	                            	</span>
+		                            <span class="caution">* 엑셀파일(xlsx)만 등록 할 수 있습니다.</span>
+		                        </p>
+		                        <p>
+		                            <div class="addFileList" ng-repeat="fileInfo in uploader.queue | orderBy:descRn:false">
+										<span>{{fileInfo.file.name}}</span>
+										<span class="file_close">
+											<a href="javascript:void(0);" class="file_close" ng-click="uploader.queue.splice($index, 1);">삭제</a>
+										</span>
+									</div>
+		                        </p>
+		                    </div>
+						</div>
+						<div class="_areaButton">
+							<div class="_center">
+								<span class="_button _large blackBtn"><a href="javascript:void(0);" ng-click="uploadScoreData()" >등록</a></span>
+								<span class="_button _large borderBtn"><a href="javascript:void(0);" ng-click="closeThisDialog()" >취소</a></span>
+							</div>
+						</div>
+					</div><!-- #_articleContent" -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

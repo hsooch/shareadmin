@@ -1,0 +1,62 @@
+@charset "utf-8";
+._areaButton ._left ._button{margin:0 4px 0 0;}
+._areaButton ._center ._button{margin:0 2px;}
+._areaButton ._right ._button{margin:0 0 0 4px;}
+._button{
+	border:0;cursor:pointer;display:inline-block;zoom:1;*display:block;
+}
+._button input,._button a{
+	border:0;cursor:pointer;color:#fff!important;
+	text-align:center;word-wrap:break-word;background-color:#666666;
+	-moz-border-radius:0px;-webkit-border-radius:0px;
+	border-radius:0px;display:inline-block;zoom:1;*display:block;
+}
+._button._maximum input,._button._maximum a{
+	font-size:2.2em;height:70px;line-height:70px;
+	font-weight:700;padding:0 1em;
+}
+._button._large input,._button._large a{
+	font-size:1em;height:40px;line-height:40px;
+	font-weight:700;padding:0 1em;
+}
+._button._small input,._button._small a{
+	font-size: 14px;height:26px;line-height:26px;
+	letter-spacing:-.01em;padding:0 1em;
+}
+._button._minimum input,._button._minimum a{
+	height:20px;line-height:20px;letter-spacing:-.01em;
+	padding:0 .5em;border:1px solid #d00006; 
+	color:#757575!important; background:#fff;border-radius:4px;
+}
+._button._active input,._button._active a{
+	color:#fff;background-color:#a62121;
+}
+._button._gray input,._button._gray a{
+	border:1px solid #757575; border-radius: 4px; 
+	background-color:#fff; color:#757575!important;
+}
+._button._blue input,._button._blue a{
+	background-color:#4285f4;color:#fff;
+}
+._button._green input,._button._green a{
+	border:1px solid #2c8bec; border-radius: 4px; 
+	background-color:#fff; color:#757575!important;
+}
+._button._green input,._button._save a{
+	border:1px solid #A6A6A6; border-radius: 4px; 
+	background-color:#A6A6A6; color:#fff!important;
+	line-height:34px;height:34px;
+}
+._button._green input,._button._apply a{
+	border:1px solid #757575; border-radius: 4px; 
+	background-color:#757575; color:#fff!important;
+	line-height:34px;height:34px;
+}
+._button._green input,._button._puple a{
+	border:1px solid #8064a2; border-radius: 4px; 
+	background-color:#fff; color:#757575!important;
+}
+._form ._insert ._button input,._form ._insert ._button a{
+	min-width:97px;font-size: 14px;height:35px;
+	line-height:35px;letter-spacing:-.01em;
+}

@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="exchangeMapper">
+
+	<select id="getHopeUnivList" parameterType="Map" resultType="umap">
+		/* exchangeMapper.getHopeUnivList */
+		SELECT
+			UV.UNIV_CODE, UV.SUBJECT_CNT, TC.CODE_NAME
+		FROM TBL_CODE TC
+			INNER JOIN (
+						   SELECT
+							   THS.UNIV_CODE,
+							   COUNT(THS.UNIV_CODE) AS SUBJECT_CNT
+						   FROM TBL_SEMESTER_GUIDE_DOC TSGD
+							   INNER JOIN TBL_HOPE_SUBJECT THS
+								   ON (TSGD.UNIV_CODE = THS.UNIV_CODE AND TSGD.YEAR = THS.YEAR AND
+									   TSGD.SEMESTER_CODE = THS.SEMESTER_CODE)
+						   WHERE TSGD.DISPLAY_YN = 'Y' AND THS.USER_SEQ = #{userSeq}
+						   GROUP BY THS.UNIV_CODE
+					   ) UV ON (TC.CODE = UV.UNIV_CODE)
+
+	</select>
+
+	<select id="getHopeSemesterList" parameterType="Map" resultType="umap">
+		/* exchangeMapper.getHopeSemesterList */
+		SELECT
+			THS.*,
+			TC.CODE_NAME
+		FROM TBL_CODE TC
+			INNER JOIN (
+						   SELECT
+							   THS.YEAR,
+							   THS.SEMESTER_CODE,
+							   COUNT(THS.SEMESTER_CODE) AS SEMESTER_CNT
+						   FROM TBL_SEMESTER_GUIDE_DOC TSGD
+							   INNER JOIN TBL_HOPE_SUBJECT THS
+								   ON (TSGD.UNIV_CODE = THS.UNIV_CODE AND TSGD.YEAR = THS.YEAR AND
+									   TSGD.SEMESTER_CODE = THS.SEMESTER_CODE)
+						   WHERE TSGD.DISPLAY_YN = 'Y' AND THS.UNIV_CODE = #{univCode} AND THS.USER_SEQ = #{userSeq}
+						   GROUP BY THS.YEAR, THS.SEMESTER_CODE
+					   ) THS ON (TC.CODE = THS.SEMESTER_CODE)
+		ORDER BY THS.YEAR DESC, TC.CODE_INDEX DESC
+
+	</select>
+
+	<select id="getHopeRegCntInfo" parameterType="Map" resultType="umap">
+		/* exchangeMapper.getHopeRegCntInfo */
+		SELECT
+			(
+				SELECT COUNT(0) AS UNIV_CNT
+				FROM (
+						 SELECT THS.UNIV_CODE
+						 FROM TBL_SEMESTER_GUIDE_DOC TSGD
+							 INNER JOIN TBL_HOPE_SUBJECT THS
+								 ON (TSGD.UNIV_CODE = THS.UNIV_CODE AND TSGD.YEAR = THS.YEAR AND
+									 TSGD.SEMESTER_CODE = THS.SEMESTER_CODE)
+						 WHERE TSGD.DISPLAY_YN = 'Y' AND THS.USER_SEQ = #{userSeq}
+						 GROUP BY THS.UNIV_CODE) A) AS UNIV_CNT,
+			(SELECT COUNT(0) AS SEMESTER_CNT
+			 FROM (
+					  SELECT THS.USER_SEQ
+					  FROM TBL_SEMESTER_GUIDE_DOC TSGD
+						  INNER JOIN TBL_HOPE_SUBJECT THS
+							  ON (TSGD.UNIV_CODE = THS.UNIV_CODE AND TSGD.YEAR = THS.YEAR AND
+								  TSGD.SEMESTER_CODE = THS.SEMESTER_CODE)
+					  WHERE TSGD.DISPLAY_YN = 'Y' AND THS.USER_SEQ = #{userSeq}
+				  ) B)                          AS SEMESTER_CNT
+	</select>
+
+	<select id="getHopeSubjectList" parameterType="Map" resultMap="subjectMapper.subjectList">
+		/* exchangeMapper.getHopeSubjectList */
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+		SELECT
+			TSS.COMPLETE_TYPE,
+			TSS.DEPARTMENT,
+			TSS.SUBJECT_NAME,
+			TSS.CLASS_NUM,
+			TSS.TEACHER_NAME,
+			TSS.SUBJECT_POINT,
+			TSS.MAX_STUDENT_CNT,
+			TSS.MAX_ETC_CNT,
+			ISNULL(TSS.MAX_CLASS_CNT, 0) AS MAX_CLASS_CNT,
+			TSS.UNIV_CODE,
+			TSS.YEAR,
+			TSS.SEMESTER_CODE,
+			TSS.SUBJECT_NUM,
+			(SELECT COUNT(0)
+				FROM TBL_APPLY_EXCHANGE TAE
+				WHERE TAE.UNIV_CODE = THS.UNIV_CODE AND TAE.YEAR = THS.YEAR
+					AND TAE.SEMESTER_CODE = THS.SEMESTER_CODE AND TAE.SUBJECT_NUM = THS.SUBJECT_NUM
+					AND TAE.CLASS_NUM = THS.CLASS_NUM) AS APPLY_CNT
+		FROM TBL_HOPE_SUBJECT THS
+			INNER JOIN TBL_SEMESTER_SUBJECT TSS
+				ON (THS.UNIV_CODE = TSS.UNIV_CODE AND THS.YEAR = TSS.YEAR AND THS.SEMESTER_CODE = TSS.SEMESTER_CODE
+					AND THS.SUBJECT_NUM = TSS.SUBJECT_NUM AND THS.CLASS_NUM = TSS.CLASS_NUM)
+		WHERE THS.UNIV_CODE = #{univCode} AND THS.YEAR = #{year} AND THS.SEMESTER_CODE = #{semesterCode}
+			  AND THS.USER_SEQ = #{userSeq}
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+
+	</select>
+	
+	<delete id="deleteHopeSubject" parameterType="Map">
+		DELETE FrOM TBL_HOPE_SUBJECT
+		WHERE UNIV_CODE = #{univCode} AND YEAR = #{year} AND SEMESTER_CODE = #{semesterCode}
+			  AND USER_SEQ = #{userSeq}
+		  <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subjectNum)">
+			  AND SUBJECT_NUM = #{subjectNum}
+		  </if>
+		  <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(classNum)">
+			  AND CLASS_NUM = #{classNum}
+		  </if>
+
+	</delete>
+
+    <select id="getExSubjectList" parameterType="map" resultType="umap">
+        /* exchangeMapper.getExSubjectList */
+        <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+        SELECT 
+              A.UNIV_CODE
+            , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+            , A.YEAR AS YEAR
+            , A.SEMESTER_CODE
+            , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SEMESTER_CODE) AS SEMESTER_CODE_NAME
+            , A.SUBJECT_NUM
+            , A.CLASS_NUM
+            , A.SUBJECT_GRADE_CODE
+            , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SUBJECT_GRADE_CODE) AS SUBJECT_GRADE_CODE_NAME
+            , A.COMPLETE_TYPE
+            , A.SUBJECT_NAME
+            , A.SUBJECT_NAME_EN
+            , A.DEPARTMENT
+            , A.SUBJECT_POINT
+            , A.TEACHER_NAME
+            , A.MAX_STUDENT_CNT
+            , A.MAX_ETC_CNT
+            , A.MEMO
+            , A.CLASS_ACCEPT_TYPE
+            , CASE A.CLASS_ACCEPT_TYPE
+                WHEN 1 THEN '학생'
+                WHEN 2 THEN '학생+청강생'
+                WHEN 3 THEN '청강생'
+                ELSE '학생+청강생' 
+                END AS CLASS_ACCEPTE_TYPE_NAME
+            , A.CURRICULUM_URL
+            , A.REG_USER_SEQ
+            , (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+            , CONVERT(VARCHAR, A.REG_DT, 102) AS REG_DT
+            , A.MOD_USER_SEQ
+            , (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+            , CONVERT(VARCHAR, A.MOD_DT, 102) AS MOD_DT
+        FROM TBL_SEMESTER_SUBJECT A
+        WHERE 1=1
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+            AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+            AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchYear)">
+            AND A.YEAR = #{searchYear}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSemesterCode)">
+            AND A.SEMESTER_CODE = #{searchSemesterCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSubjectGradeCode)">
+            AND A.SUBJECT_GRADE_CODE = #{searchSubjectGradeCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchClassAcceptType)">
+            AND A.CLASS_ACCEPT_TYPE = #{searchClassAcceptType}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchCompleted)">
+            AND A.COMPLETE_TYPE LIKE '%' + #{searchCompleted} + '%'
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchDepartment)">
+            AND A.DEPARTMENT LIKE '%' + #{searchDepartment} + '%'
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSubject)">
+            AND A.SUBJECT_NAME LIKE '%' + #{searchSubject} + '%'
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchTeacher)">
+            AND A.TEACHER_NAME LIKE '%' + #{searchTeacher} + '%'
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(selDayofweekCode)">
+            AND EXISTS (SELECT 1 
+                          FROM TBL_SUBJECT_TIME
+                         WHERE A.SEMESTER_CODE = SEMESTER_CODE
+                           AND A.YEAR = YEAR
+                           AND A.UNIV_CODE = UNIV_CODE
+                           AND A.SUBJECT_NUM = SUBJECT_NUM
+                           AND A.CLASS_NUM = CLASS_NUM
+                           AND DAY_OF_WEEK = #{selDayofweekCode})
+        </if>
+        <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+ 	
+ 	<select id="getApplyExchangeWithAGSendList" parameterType="map" resultType="umap">
+    	/* exchangeMapper.getApplyExchangeWithAGSendList */
+    	<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+        SELECT DISTINCT
+               A.USER_UNIV_CODE
+ 	 		 , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.USER_UNIV_CODE) AS USER_UNIV_CODE_NAME
+             , A.USER_DEPARTMENT
+             , A.STUDENT_GRADE_CODE
+ 			 , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STUDENT_GRADE_CODE) AS STUDENT_GRADE_CODE_NAME
+             , A.STUDENT_NUMBER
+             , A.USER_SEQ
+             , A.USER_NAME
+ 			 , C.USER_EMAIL
+ 			 , C.CELL_NO
+             , A.M_IN_ST_NUM
+             , Q.TARGET_YN
+             , A.MSG_SEQ
+             , (SELECT USER_NAME FROM TBL_USER WHERE D.REG_USER_SEQ = USER_SEQ) AS SENDER_NAME
+			 , CONVERT(VARCHAR, D.REG_DT, 102) AS SEND_REG_DT
+			 , A.SEMESTER_CODE
+			 , A.UNIV_CODE
+			 , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			 , A.YEAR
+          FROM TBL_APPLY_EXCHANGE A
+               INNER JOIN TBL_SEMESTER_SUBJECT B ON A.UNIV_CODE = B.UNIV_CODE AND A.SUBJECT_NUM = B.SUBJECT_NUM
+               INNER JOIN TBL_USER C ON A.USER_SEQ = C.USER_SEQ
+               LEFT OUTER JOIN TBL_MESSAGE D ON A.MSG_SEQ = D.MSG_SEQ
+               LEFT OUTER JOIN TBL_MESSAGE_TARGET E ON A.MSG_SEQ = E.MSG_SEQ AND A.USER_SEQ = E.USER_SEQ
+               LEFT OUTER JOIN tms.dbo.TMS_QUEUE Q ON E.QUEUE_SEQ = Q.SEQ
+         WHERE A.APPLY_STATUS = '05'
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+        	AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+        	AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUserUniv)">
+        	AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUserUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUniv)">
+        	AND A.USER_UNIV_CODE = #{searchUserUniv}
+        </if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchYear)">
+        	AND A.YEAR = #{searchYear}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSemesterCode)">
+        	AND A.SEMESTER_CODE = #{searchSemesterCode}
+        </if>
+<!--         <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSmsStatus)"> -->
+<!--         	AND ISNULL(E.SEND_STATUS, 1) = #{searchSmsStatus} -->
+<!--         </if> -->
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKey)">
+        	<choose>
+        		<when test='searchVal == "userUniv"'>
+        			AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%')
+        		</when>
+        		<when test='searchVal == "userDepartment"'>
+        			AND A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%'
+        		</when>
+        		<when test='searchVal == "studentNumber"'>
+        			AND A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%'
+        		</when>
+        		<when test='searchVal == "userName"'>
+        			AND A.USER_NAME LIKE '%'+ #{searchKey} + '%'
+        		</when>
+        		<when test='searchVal == "userEmail"'>
+        			AND C.USER_EMAIL LIKE '%'+ #{searchKey} + '%'
+        		</when>
+        		<when test='searchVal == "cellNo"'>
+        			AND C.CELL_NO LIKE '%'+ #{searchKey} + '%'
+        		</when>
+        		<when test='searchVal == "mInStNum"'>
+        			AND A.M_IN_ST_NUM LIKE '%'+ #{searchKey} + '%'
+        		</when>
+        		<otherwise>
+        			AND (
+        			    A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%') OR
+        			    A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%' OR
+        			    A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%' OR
+        			    A.USER_NAME LIKE '%'+ #{searchKey} + '%' OR
+        			    C.USER_EMAIL LIKE '%'+ #{searchKey} + '%' OR
+        			    C.CELL_NO LIKE '%'+ #{searchKey} + '%' OR
+        			    A.M_IN_ST_NUM LIKE '%'+ #{searchKey} + '%'
+        			)
+        		</otherwise>
+        	</choose>
+        </if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+
+	<insert id="saveHopeSubject" parameterType="Map">
+		IF NOT EXISTS(SELECT 1 FROM TBL_HOPE_SUBJECT
+							  	WHERE UNIV_CODE = #{univCode} AND YEAR = #{year}  AND SEMESTER_CODE = #{semesterCode}
+									AND SUBJECT_NUM = #{subjectNum} AND CLASS_NUM = #{classNum} AND USER_SEQ = #{userSeq})
+			INSERT INTO TBL_HOPE_SUBJECT(UNIV_CODE, YEAR, SEMESTER_CODE, SUBJECT_NUM, CLASS_NUM, USER_SEQ)
+			VALUES (#{univCode}, #{year}, #{semesterCode}, #{subjectNum}, #{classNum}, #{userSeq})
+	</insert>
+
+    <!-- 2018.06.06 lhj 작업중 -->
+    <select id="getApplyExchangeUserList" parameterType="map" resultType="uMap">
+		/* exchangeMapper.getApplyExchangeUserList */
+		SELECT
+			  CONVERT(VARCHAR, AAA.REG_DT, 102) AS REG_DT
+			, CONVERT(VARCHAR, AAA.AP_COFM_DT, 102) AS AP_COFM_DT
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = AAA.AP_COFM_USER_SEQ) AS AP_COFM_USER_NAME
+			, CONVERT(VARCHAR, AAA.EX_COFM_DT, 102) AS EX_COFM_DT
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = AAA.EX_COFM_USER_SEQ) AS EX_COFM_USER_NAME
+			, CONVERT(VARCHAR, AAA.SE_CANCEL_DT, 102) AS SE_CANCEL_DT
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = AAA.SE_CANCEL_COFM_USER_SEQ) AS SE_CANCEL_COFM_USER_NAME
+			, CONVERT(VARCHAR, AAA.SE_CANCEL_COFM_DT, 102) AS SE_CANCEL_COFM_DT
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = AAA.MESSAGE_CONFIRM_USER_SEQ) AS MESSAGE_CONFIRM_USER_NAME
+			, CONVERT(VARCHAR, AAA.MESSAGE_CONFIRM_DT, 102) AS MESSAGE_CONFIRM_DT
+			, CONVERT(VARCHAR, AAA.AP_COFM_TRANS_DT, 102) AS AP_COFM_TRANS_DT
+			, CONVERT(VARCHAR, AAA.SE_CANCEL_TRANS_DT, 102) AS SE_CANCEL_TRANS_DT
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = AAA.UNIV_CODE) AS UNIV_CODE_NAME
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = AAA.STUDENT_GRADE_CODE) AS STUDENT_GRADE_CODE_NAME
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = AAA.USER_UNIV_CODE) AS USER_UNIV_CODE_NAME
+			<choose>
+				<when test='searchPage == "confirmOut"'>
+				, CASE AAA.APPLY_STATUS
+				WHEN 1 THEN '신청'
+				WHEN 2 THEN '승인'
+				WHEN 3 THEN '반려'
+				WHEN 4 THEN '이관완료'
+				WHEN 5 THEN '교류대승인'
+				WHEN 6 THEN '교류대반려'
+				ELSE '-' END APPLY_STATUS_NAME
+				</when>
+				<when test='searchPage == "confirmIn"'>
+				, CASE AAA.APPLY_STATUS
+				WHEN 4 THEN '대기'
+				WHEN 5 THEN '승인'
+				WHEN 6 THEN '반려'
+				ELSE '-' END APPLY_STATUS_NAME
+				</when>
+				<otherwise>
+				,'-' AS APPLY_STATUS_NAME
+				</otherwise>
+			</choose>
+			<choose>
+				<when test='searchPage == "confirmOut"'>
+				, CONVERT(VARCHAR, CASE WHEN AAA.APPLY_STATUS > 3 THEN 2 ELSE AAA.APPLY_STATUS END) AS CONFM_REJECT_STATUS
+				</when>
+				<otherwise>
+				, CONVERT(VARCHAR, AAA.APPLY_STATUS) AS CONFM_REJECT_STATUS
+				</otherwise>
+			</choose>
+			, CASE WHEN AAA.APPLY_STATUS > 3 THEN (CASE AAA.APPLY_STATUS
+															WHEN 4 THEN '이관완료'
+															WHEN 5 THEN '교류대승인'
+															WHEN 6 THEN '교류대반려'
+															ELSE '-'
+														END)
+			ELSE '-' END TRANSFER_STATUS_NAME
+			<choose>
+				<when test='searchPage == "cancelOut0" or searchPage == "cancelOut1"'>
+				, CASE AAA.APPLY_CANCEL_STATUS
+				WHEN 1 THEN '신청'
+				WHEN 2 THEN '승인'
+				WHEN 3 THEN '반려'
+				WHEN 4 THEN '승인' <!-- 엑셀표시용 -->
+				ELSE '-' END APPLY_CANCEL_STATUS_NAME
+				</when>
+				<otherwise>
+				, '-' AS APPLY_CANCEL_STATUS_NAME
+				</otherwise>				
+			</choose>
+			<choose>
+				<when test='searchPage == "cancelOut0" or searchPage == "cancelOut1"'>
+				, CONVERT(VARCHAR, CASE WHEN AAA.APPLY_CANCEL_STATUS > 3 THEN 2 ELSE AAA.APPLY_CANCEL_STATUS END) AS CANCEL_CONFM_REJECT_STATUS
+				</when>
+				<otherwise>
+				, CONVERT(VARCHAR, AAA.APPLY_CANCEL_STATUS) AS CANCEL_CONFM_REJECT_STATUS
+				</otherwise>
+			</choose>
+			, CASE WHEN AAA.MESSAGE_CONFIRM = 'Y' THEN '확인' WHEN (AAA.MESSAGE_CONFIRM = 'N' AND AAA.APPLY_CANCEL_STATUS = 4) THEN '미확인' ELSE '-' END AS MESSAGE_CONFIRM_NAME
+			, CASE WHEN AAA.APPLY_CANCEL_STATUS > 3 THEN (CASE AAA.APPLY_CANCEL_STATUS
+															WHEN 4 THEN '이관완료'
+															ELSE '-'
+														END)
+			ELSE '-' END TRANSFER_CANCEL_STATUS_NAME
+			, CASE AAA.MESSAGE_CONFIRM WHEN 'Y' THEN '확인완료' ELSE '미확인' END AS MESSAGE_CONFIRM_NAME
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = AAA.SEMESTER_CODE) AS SEMESTER_CODE_NAME
+			,AAA.*
+		FROM (
+	    	<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+	    	SELECT
+				A.UNIV_CODE
+				, A.YEAR
+				, A.SEMESTER_CODE
+				, A.SUBJECT_NUM
+				, A.CLASS_NUM
+				, A.USER_UNIV_CODE
+				, A.STUDENT_NUMBER
+				, A.USER_SEQ
+				, A.USER_NAME
+				, A.COLLEGE_NAME
+				, A.USER_DEPARTMENT
+				, A.STUDENT_GRADE_CODE
+				, A.SUBJECT_GRADE_CODE
+				, A.COMPLETE_TYPE
+				, A.SUBJECT_NAME
+				, A.SUBJECT_DEPARTMENT
+				, A.SUBJECT_POINT
+				, A.TEACHER_NAME
+				, A.APPLY_EXCHANGE_SEQ
+				, A.APPLY_STATUS
+				, A.REG_DT
+				, A.REJECT_REASON
+				, A.AP_COFM_USER_SEQ
+				, A.AP_COFM_DT
+				, A.EX_COFM_USER_SEQ
+				, A.EX_COFM_DT
+				, A.SE_CANCEL_DT
+				, A.SE_CANCEL_COFM_USER_SEQ
+				, A.SE_CANCEL_COFM_DT
+				, A.U_IN_ST_NUM
+				, A.M_IN_ST_NUM
+				, A.SEND_MESSAGE
+				, A.MESSAGE_CONFIRM
+				, A.MESSAGE_CONFIRM_DT
+				, A.MESSAGE_CONFIRM_USER_SEQ
+				, A.MSG_SEQ
+				, A.APPLY_CANCEL_STATUS
+				, A.CANCEL_REJECT_REASON
+				, A.AP_COFM_TRANS_DT
+				, A.SE_CANCEL_TRANS_DT
+			FROM TBL_APPLY_EXCHANGE A
+			WHERE 1=1
+			<choose>
+	        	<when test='searchPage == "confirmIn"'>
+					<![CDATA[AND A.APPLY_STATUS > 3]]>
+				</when>
+				<when test='searchPage == "cancelOut0" or searchPage == "cancelOut1"'>
+					<![CDATA[AND A.APPLY_CANCEL_STATUS IS NOT NULL]]>
+				</when>
+				<when test='searchPage == "cancelIn"'>
+					<![CDATA[AND A.APPLY_CANCEL_STATUS > 3]]>
+				</when>
+			</choose>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+	        	<choose>
+	        		<when test='searchPage == "confirmOut" or searchPage == "cancelOut"'>
+	        			AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+	        		</when>
+					<when test='searchPage == "confirmIn" or searchPage == "cancelIn"'>
+						AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+					</when>
+					<otherwise>
+			        	AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+					</otherwise>
+	        	</choose>
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+	        	<choose>
+	        		<when test='searchPage == "confirmOut" or searchPage == "cancelOut"'>
+	        			AND A.USER_UNIV_CODE = #{searchUniv}
+	        		</when>
+					<when test='searchPage == "confirmIn" or searchPage == "cancelIn"'>
+						AND A.UNIV_CODE = #{searchUniv}
+					</when>
+					<otherwise>
+			        	AND A.USER_UNIV_CODE = #{searchUniv}
+					</otherwise>
+	        	</choose>
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUserUniv)">
+       			AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUserUnivArea} )
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUniv)">
+	        	AND A.USER_UNIV_CODE = #{searchUserUniv}
+	        </if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStudentNumber)">
+				AND A.STUDENT_NUMBER = #{searchStudentNumber}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchYear)">
+	        	AND A.YEAR = #{searchYear}
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSemesterCode)">
+	        	AND A.SEMESTER_CODE = #{searchSemesterCode}
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStudentGradeCode)">
+	        	AND A.SUBJECT_GRADE_CODE = #{searchStudentGradeCode}
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchMessageConfirm)">
+	        	AND A.MESSAGE_CONFIRM = #{searchMessageConfirm}
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchApplyStatus)">
+	        	<choose>
+	        		<when test='searchApplyStatus == "2"'>
+	        			<choose>
+	        				<when test='searchPage == "confirmOut"'>
+	        					<![CDATA[AND (A.APPLY_STATUS = #{searchApplyStatus} OR A.APPLY_STATUS > 3)]]>
+	        				</when>
+	        				<when test='searchPage == "confirmIn"'>
+	        					<![CDATA[AND A.APPLY_STATUS = #{searchApplyStatus}]]>
+	        				</when>
+	        				<when test='searchPage == "cancelOut0" or searchPage == "cancelOut1"'>
+	        					<![CDATA[AND (A.APPLY_CANCEL_STATUS = #{searchApplyStatus} OR A.APPLY_CANCEL_STATUS > 3)]]>
+	        				</when>
+	        				<when test='searchPage == "cancelIn"'>
+	        					<![CDATA[AND A.APPLY_CANCEL_STATUS = #{searchApplyStatus}]]>
+	        				</when>
+	        				<otherwise>
+	        					<![CDATA[AND A.APPLY_STATUS = #{searchApplyStatus}]]>
+	        				</otherwise>
+	        			</choose>
+	        		</when>
+	        		<otherwise>
+	        			<choose>
+		        			<when test='searchPage == "confirmOut" or searchPage == "confirmIn"'>
+		        			AND A.APPLY_STATUS = #{searchApplyStatus}
+		        			</when>
+		        			<when test='searchPage == "cancelOut" or searchPage == "cancelIn"'>
+		        			AND A.APPLY_CANCEL_STATUS = #{searchApplyStatus}
+		        			</when>
+	        			</choose>
+	        		</otherwise>
+	        	</choose>
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKey)">
+		        <choose>
+		        	<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchType)">
+		        		<choose>
+	        				<when test='searchPage == "confirmOut" or searchPage == "cancelOut0" or searchPage == "cancelOut1"'>
+	        					<choose>
+				        			<when test='searchType == "userDepartment"'>
+				        				AND A.USER_DEPARTMENT LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "studentNumber"'>
+				        				AND A.STUDENT_NUMBER LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "userName"'>
+				        				AND A.USER_NAME LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "univCodeName"'>
+				        				AND (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "subjectName"'>
+				        				AND A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        		</choose>
+	        				</when>
+	        				<when test='searchPage == "confirmIn" or searchPage == "cancelIn"'>
+	        					<choose>
+				        			<when test='searchType == "userUnivCodeName"'>
+				        				AND (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "userDepartment"'>
+				        				AND A.USER_DEPARTMENT LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "studentNumber"'>
+				        				AND (A.STUDENT_NUMBER LIKE '%' + #{searchKey} + '%' OR A.M_IN_ST_NUM LIKE '%' + #{searchKey} + '%')
+				        			</when>
+				        			<when test='searchType == "userName"'>
+				        				AND A.USER_NAME LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "subjectNum"'>
+				        				AND A.SUBJECT_NUM LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "subjectName"'>
+				        				AND A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        		</choose>
+	        				</when>
+	        				<otherwise>
+	        					<choose>
+				        			<when test='searchType == "userDepartment"'>
+				        				AND A.USER_DEPARTMENT LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "studentNumber"'>
+				        				AND A.STUDENT_NUMBER LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "userName"'>
+				        				AND A.USER_NAME LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "univCodeName"'>
+				        				AND (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        			<when test='searchType == "subjectName"'>
+				        				AND A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%'
+				        			</when>
+				        		</choose>
+	        				</otherwise>
+	        			</choose>
+		        	</when>
+		        	<otherwise>
+		        		<choose>
+		        			<when test='earchPage == "confirmOut" or searchPage == "cancelOut0" or searchPage == "cancelOut1"'>
+		        				AND (
+				        			A.USER_DEPARTMENT LIKE '%' + #{searchKey} + '%' OR
+				        			A.STUDENT_NUMBER LIKE '%' + #{searchKey} + '%' OR
+				        			A.USER_NAME LIKE '%' + #{searchKey} + '%' OR
+				        			(SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) LIKE '%' + #{searchKey} + '%' OR
+				        			A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%'
+				        		)
+		        			</when>
+		        			<when test='searchPage == "confirmIn" or searchPage == "cancelIn"'>
+		        				AND (
+		        					(SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) LIKE '%' + #{searchKey} + '%' OR
+		        					A.USER_DEPARTMENT LIKE '%' + #{searchKey} + '%' OR
+		        					(A.STUDENT_NUMBER LIKE '%' + #{searchKey} + '%' OR A.M_IN_ST_NUM LIKE '%' + #{searchKey} + '%') OR
+		        					A.USER_NAME LIKE '%' + #{searchKey} + '%' OR
+		        					A.SUBJECT_NUM LIKE '%' + #{searchKey} + '%' OR
+		        					A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%'
+	        					)
+		        			</when>
+		        			<otherwise>
+		        				AND (
+				        			A.USER_DEPARTMENT LIKE '%' + #{searchKey} + '%' OR
+				        			A.STUDENT_NUMBER LIKE '%' + #{searchKey} + '%' OR
+				        			A.USER_NAME LIKE '%' + #{searchKey} + '%' OR
+				        			(SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) LIKE '%' + #{searchKey} + '%' OR
+				        			A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%'
+				        		)
+		        			</otherwise>
+		        		</choose>
+		        	</otherwise>
+		        </choose>
+	        </if>
+			<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottomWithoutOrderBy" />
+		) AAA
+		WHERE 1=1
+		ORDER BY ROWNUM
+    </select>
+
+    <update id="changeApplyStatus" parameterType="map">
+    	/* exchangeMapper.changeApplyStatus */
+    	UPDATE TBL_APPLY_EXCHANGE
+    	SET
+    		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(applyStatus)">
+    			APPLY_STATUS = #{applyStatus}
+	    		<choose>
+	    			<when test='applyStatus == "2" or applyStatus == "3"'>
+	    				, AP_COFM_USER_SEQ = #{modUserSeq}
+						, AP_COFM_DT = GETDATE()
+	    			</when>
+	    			<when test='applyStatus == "5" or applyStatus == "6"'>
+	    				, EX_COFM_USER_SEQ = #{modUserSeq}
+	    				, EX_COFM_DT = GETDATE()
+	    			</when>
+	    		</choose>
+    			<if test='applyStatus == "3" or applyStatus == "6"'>
+    				, REJECT_REASON = #{rejectReason}
+    			</if>
+    			<if test='applyStatus == "4"'>
+    				, AP_COFM_TRANS_DT = GETDATE()
+    			</if>
+    		</if>
+    		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(applyCancelStatus)">
+    			APPLY_CANCEL_STATUS = #{applyCancelStatus}
+    			<choose>
+    				<when test='applyCancelStatus == "2" or applyCancelStatus == "3"'>
+    					, SE_CANCEL_COFM_USER_SEQ = #{modUserSeq}
+    					, SE_CANCEL_COFM_DT = GETDATE()
+    				</when>
+    			</choose>
+    			<if test='applyCancelStatus == "3"'>
+    				, CANCEL_REJECT_REASON = #{cancelRejectReason}
+    			</if>
+    			<if test='applyCancelStatus == "4"'>
+    				, SEND_MESSAGE = #{sendMessage}
+    				, SE_CANCEL_TRANS_DT = GETDATE()
+    			</if>
+    		</if>
+    		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(mInStNum)">
+    			M_IN_ST_NUM = #{mInStNum}
+    		</if>
+    		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(messageConfirm)">
+    			MESSAGE_CONFIRM = #{messageConfirm}
+    			, MESSAGE_CONFIRM_DT = GETDATE()
+    			, MESSAGE_CONFIRM_USER_SEQ = #{modUserSeq}
+    		</if>
+    	WHERE 
+    	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(applyExchangeSeq)">
+    		APPLY_EXCHANGE_SEQ = #{applyExchangeSeq}
+    	</if>
+    	<if test="applyExchangeSeqArr != null and @org.apache.commons.lang3.StringUtils@isEmpty(applyExchangeSeq)">
+			<foreach item="seq" collection="applyExchangeSeqArr" open="APPLY_EXCHANGE_SEQ IN (" close=")" separator=",">
+	    		#{seq}
+	    	</foreach>
+		</if>
+    	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(semesterCode)">
+    	AND SEMESTER_CODE = #{semesterCode}
+    	</if>
+    	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(year)">
+		AND YEAR = #{year}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(univCode)">
+		AND UNIV_CODE = #{univCode}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subjectNum)">
+		AND SUBJECT_NUM = #{subjectNum}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(classNum)">
+		AND CLASS_NUM = #{classNum}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userUnivCode)">
+		AND USER_UNIV_CODE = #{userUnivCode}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(studentNumber)">
+		AND STUDENT_NUMBER = #{studentNumber}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userSeq)">
+		AND USER_SEQ = #{userSeq}
+		</if>
+		;
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(applyExchangeSeq) and @org.apache.commons.lang3.StringUtils@isNotEmpty(mInStNum)">
+   			DECLARE @APPLY_EXCHANGE_SEQ INT,
+					@MOU_UNIV_CODE VARCHAR(11),
+					@USER_UNIV_CODE VARCHAR(11),
+					@STUDENT_NUMBER VARCHAR(50),
+					@MOU_STUDENT_NUMBER VARCHAR(50)
+			SET @APPLY_EXCHANGE_SEQ = #{applyExchangeSeq}
+			SET @MOU_UNIV_CODE = (SELECT UNIV_CODE FROM TBL_APPLY_EXCHANGE WHERE APPLY_EXCHANGE_SEQ = @APPLY_EXCHANGE_SEQ)
+			SET @USER_UNIV_CODE = (SELECT USER_UNIV_CODE FROM TBL_APPLY_EXCHANGE WHERE APPLY_EXCHANGE_SEQ = @APPLY_EXCHANGE_SEQ)
+			SET @STUDENT_NUMBER = (SELECT STUDENT_NUMBER FROM TBL_APPLY_EXCHANGE WHERE APPLY_EXCHANGE_SEQ = @APPLY_EXCHANGE_SEQ)
+			SET @MOU_STUDENT_NUMBER = #{mInStNum}
+			
+			SELECT @APPLY_EXCHANGE_SEQ
+				, @MOU_UNIV_CODE
+				, @USER_UNIV_CODE
+				, @STUDENT_NUMBER
+				, @MOU_STUDENT_NUMBER
+			
+			IF NOT EXISTS(SELECT 1 FROM TBL_MOU_STUDENT_NUMBER WHERE MOU_UNIV_CODE = @MOU_UNIV_CODE AND USER_UNIV_CODE = @USER_UNIV_CODE AND STUDENT_NUMBER = @STUDENT_NUMBER)
+				INSERT INTO TBL_MOU_STUDENT_NUMBER ( MOU_UNIV_CODE, USER_UNIV_CODE, STUDENT_NUMBER, MOU_STUDENT_NUMBER )
+				VALUES ( @MOU_UNIV_CODE, @USER_UNIV_CODE, @STUDENT_NUMBER, @MOU_STUDENT_NUMBER )
+			ELSE
+				UPDATE TBL_MOU_STUDENT_NUMBER
+				SET
+					  MOU_UNIV_CODE = @MOU_UNIV_CODE
+					, USER_UNIV_CODE = @USER_UNIV_CODE
+					, STUDENT_NUMBER = @STUDENT_NUMBER
+					, MOU_STUDENT_NUMBER = @MOU_STUDENT_NUMBER
+				WHERE MOU_UNIV_CODE = @MOU_UNIV_CODE
+				AND USER_UNIV_CODE = @USER_UNIV_CODE
+				AND STUDENT_NUMBER = @STUDENT_NUMBER
+			;
+    	</if>
+		
+    </update>
+    
+    <!-- //2018.06.06 lhj 작업중 -->
+
+	<insert id="saveExchangeInfo" parameterType="Map">
+		IF NOT EXISTS(SELECT 1 FROM TBL_APPLY_EXCHANGE
+						WHERE UNIV_CODE = #{univCode} AND YEAR = #{year} AND SEMESTER_CODE = #{semesterCode}
+							AND SUBJECT_NUM = #{subjectNum} AND CLASS_NUM = #{classNum} AND USER_UNIV_CODE = #{userUnivCode}
+							AND STUDENT_NUMBER = #{studentNumber})
+			INSERT INTO TBL_APPLY_EXCHANGE(
+				UNIV_CODE, YEAR, SEMESTER_CODE, SUBJECT_NUM, CLASS_NUM,
+				USER_UNIV_CODE, STUDENT_NUMBER, USER_SEQ, USER_NAME, COLLEGE_NAME,
+				USER_DEPARTMENT, STUDENT_GRADE_CODE, SUBJECT_GRADE_CODE, COMPLETE_TYPE,
+				SUBJECT_NAME, SUBJECT_DEPARTMENT, SUBJECT_POINT, TEACHER_NAME,
+				APPLY_STATUS, U_IN_ST_NUM
+			) VALUES (
+					#{univCode}, #{year}, #{semesterCode}, #{subjectNum}, #{classNum},
+					#{userUnivCode}, #{studentNumber}, #{userSeq}, #{userName}, #{collegeName},
+					#{userDepartment}, #{studentGradeCode}, #{subjectGradeCode}, #{completeType},
+					#{subjectName}, #{subjectDepartment}, #{subjectPoint}, #{teacherName},
+					1, #{uInStNum}
+			)
+	</insert>
+</mapper>

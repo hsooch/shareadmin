@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="moocmappingMapper">
+
+    <!-- 하위 코드 목록을 조회 한다. -->
+    <select id="selectCodeList" parameterType="Map" resultType="moocmappingVO">
+        
+       	SELECT
+       		  CODE
+        	, CODE_NAME
+        	, CODE_DESC
+        	, CODE_INDEX      	 
+        	, REG_DT
+        	, REG_USER_ID
+        	, MOD_DT
+			, MOD_USER_ID
+        FROM COURSE_CODE        
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(codeType)">
+            WHERE CODE_TYPE = #{codeType}
+        </if>
+        ORDER BY CODE ASC
+    </select>
+    
+     
+    
+    <insert id="insertMapping" parameterType="moocmappingVO" >
+   	 	insert into course_mapping
+    	(
+    		course_id
+    		, course_name
+    		, course_subject 
+    		, course_type    		
+    		, reg_dt    		
+    		, mod_dt 
+    	)
+    	values (
+    		#{courseId}
+    		, #{courseName}
+    		, #{courseSubject}
+    		, #{courseType}    		
+    		, CURDATE()   		
+    		, CURDATE()
+    	)
+    	on duplicate key 
+    	update  
+    	course_id = #{courseId}
+    	, course_name = #{courseName}
+    	, course_subject = #{courseSubject}
+    	, course_type = #{courseType}
+    	, mod_dt = CURDATE()
+    
+     
+    </insert>
+    
+</mapper>

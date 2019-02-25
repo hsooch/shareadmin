@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="messageMapper">
+
+	<update id="upsertMessage" parameterType="map">
+		/* messageMapper.upsertMessage */
+		DECLARE @MESSAGE_SEQ INT, @MSG_TYPE VARCHAR
+		SET @MESSAGE_SEQ = #{messageSeq}
+		SET @MSG_TYPE = #{msgType}
+		
+		IF NOT EXISTS (SELECT 1 FROM TBL_MESSAGE WHERE MSG_SEQ = @MESSAGE_SEQ)
+			INSERT INTO TBL_MESSAGE(
+				  REG_USER_SEQ
+				, REG_DT
+				, MSG_TYPE
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(reservationTime)">
+				, RESERVATION_TIME
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(title)">
+				, TITLE
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(contents)">
+				, CONTENTS
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(selectYn)">
+				, SELECT_YN
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(sendYn)">
+				, SEND_YN
+				</if>
+				<if test="imageSize != null">
+				, IMAGE_SIZE
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(imageFileKey)">
+				, IMAGE_FILE_KEY
+				</if>
+			)
+			VALUES(
+				#{regUserSeq}
+				, GETDATE()
+				, @MSG_TYPE
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(reservationTime)">
+				, #{reservationTime}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(title)">
+				, #{title}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(contents)">
+				, #{contents}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(selectYn)">
+				, #{selectYn}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(sendYn)">
+				, #{sendYn}
+				</if>
+				<if test="imageSize != null">
+				, #{imageSize}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(imageFileKey)">
+				, #{imageFileKey}
+				</if>
+			)
+		ELSE
+			UPDATE TBL_MESSAGE
+			SET
+				MSG_TYPE = @MSG_TYPE
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(reservationTime)">
+				, RESERVATION_TIME = #{reservationTime}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(title)">
+				, TITLE = #{title}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(contents)">
+				, CONTENTS = #{contents}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(selectYn)">
+				, SELECT_YN = #{selectYn}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(sendYn)">
+				, SEND_YN = #{sendYn}
+				</if>
+				<if test="imageSize != null">
+				, IMAGE_SIZE = #{imageSize}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(imageFileKey)">
+				, IMAGE_FILE_KEY = #{imageFileKey}
+				</if>
+			WHERE MSG_SEQ = @MESSAGE_SEQ
+			AND MSG_TYPE = @MSG_TYPE
+	</update>
+	
+	<update id="upsertTarget" parameterType="map">
+		/* messageMapper.upsertTarget */
+		DECLARE @MESSAGE_SEQ INT, @USER_SEQ INT
+		SET @MESSAGE_SEQ = #{messageSeq}
+		SET @USER_SEQ = #{userSeq}
+		
+		IF NOT EXISTS (SELECT 1 FROM TBL_MESSAGE_TARGET WHERE MESSAGE_SEQ = @MESSAGE_SEQ AND USER_SEQ = @USER_SEQ)
+			INSERT INTO TBL_MESSAGE_TARGET(
+				  MSG_SEQ
+				, USER_SEQ
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(sendStatus)">
+				, SEND_STATUS
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(failReason)">
+				, FAIL_REASON
+				</if>
+			)
+			VALUES(
+				@MESSAGE_SEQ
+				, @USER_SEQ
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(sendStatus)">
+				, #{sendStatus}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(failReason)">
+				, #{failReason}
+				</if>
+			)
+		ELSE
+			UPDATE TBL_MESSAGE_TARGET
+			SET
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(sendStatus)">
+				, SEND_STATUS = #{sendStatus}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(failReason)">
+				, FAIL_REASON = #{failReason}
+				</if>
+			WHERE MSG_SEQ = @MESSAGE_SEQ
+			AND USER_SEQ = @USER_SEQ
+	</update>
+	
+	<select id="getMessageInfo" parameterType="map" resultType="uMap">
+		/* messageMapper.getMessageInfo */
+		SELECT
+			  A.MSG_SEQ AS MESSAGE_SEQ
+			, A.MSG_TYPE
+			, CASE A.MSG_TYPE WHEN 1 THEN 'SMS' WHEN 2 THEN '이메일' ELSE '' END AS MSG_TYPE_NAME
+			, A.RESERVATION_TIME
+			, A.TITLE
+			, A.CONTENTS
+			, A.REG_USER_SEQ
+			, (SELECT UNIV_CODE FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_UNIV_CODE
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CASE
+				WHEN A.RESERVATION_TIME IS NOT NULL THEN A.RESERVATION_TIME
+				ELSE REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, A.REG_DT, 120), '-', ''), ':', ''), ' ', '')
+				END AS SEND_DT
+			, A.REG_DT
+			, A.SELECT_YN
+			, A.SEND_YN
+			, A.IMAGE_SIZE
+			, A.IMAGE_FILE_KEY
+		FROM TBL_MESSAGE A
+		WHERE A.MSG_TYPE = #{searchMsgType}
+		AND A.MSG_SEQ = #{messageSeq}
+	</select>
+	
+	<select id="getMessageList" parameterType="map" resultType="uMap">
+		/* messageMapper.getMessageList */
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+		SELECT AA.*
+		FROM (
+			SELECT
+				  A.MSG_SEQ AS MESSAGE_SEQ
+				, A.MSG_TYPE
+				, CASE A.MSG_TYPE WHEN 1 THEN 'SMS' WHEN 2 THEN '이메일' ELSE '' END AS MSG_TYPE_NAME
+				, A.RESERVATION_TIME
+				, A.TITLE
+				, A.CONTENTS
+				, A.REG_USER_SEQ
+				, (SELECT UNIV_CODE FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_UNIV_CODE
+				, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+				, CASE 
+					WHEN A.RESERVATION_TIME IS NOT NULL THEN A.RESERVATION_TIME
+					ELSE REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, A.REG_DT, 120), '-', ''), ':', ''), ' ', '')
+					END AS SEND_DT
+				, A.REG_DT
+				, A.SELECT_YN
+				, A.SEND_YN
+				, A.IMAGE_SIZE
+				, A.IMAGE_FILE_KEY
+			FROM TBL_MESSAGE A
+			WHERE A.MSG_TYPE = #{searchMsgType}
+			<if test="searchMsgType != null and searchMsgType == 2">
+				<if test="searchSelectType != null">
+					AND A.SELECT_YN = #{searchSelectType}
+				</if>
+				<choose>
+					<when test="searchSendType != null">
+						AND A.SEND_YN = #{searchSendType}
+					</when>
+					<otherwise>
+			       		AND A.SEND_YN = 'Y'
+					</otherwise>
+				</choose>
+   			</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStartDt) and @org.apache.commons.lang3.StringUtils@isEmpty(searchEndDt)">
+       			<![CDATA[AND (#{searchStartDt}+'0000') <= (CASE WHEN A.RESERVATION_TIME IS NOT NULL THEN A.RESERVATION_TIME ELSE CONVERT(VARCHAR, A.REG_DT, 112) END)]]>
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isEmpty(searchStartDt) and @org.apache.commons.lang3.StringUtils@isNotEmpty(searchEndDt)">
+       			<![CDATA[AND (#{searchEndDt}+'2359') >= (CASE WHEN A.RESERVATION_TIME IS NOT NULL THEN A.RESERVATION_TIME ELSE CONVERT(VARCHAR, A.REG_DT, 112) END)]]>
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStartDt) and @org.apache.commons.lang3.StringUtils@isNotEmpty(searchEndDt)">
+       			AND (CASE WHEN A.RESERVATION_TIME IS NOT NULL THEN A.RESERVATION_TIME ELSE CONVERT(VARCHAR, A.REG_DT, 112) END) BETWEEN #{searchStartDt}+'0000' AND #{searchEndDt}+'2359'
+	        </if>
+   		) AA
+   		WHERE 1=1
+   		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea)">
+   			AND (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = AA.REG_USER_UNIV_CODE) = #{searchUnivArea}
+   		</if>
+   		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+   			AND AA.REG_USER_UNIV_CODE = #{searchUniv}
+   		</if>
+   		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchTitle)">
+   			AND A.TITLE LIKE '%'+ #{searchTitle} +'%'
+   		</if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+	</select>
+	
+	<select id="getTargetList" parameterType="map" resultType="uMap">
+		/* messageMapper.getTargetList */
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+			SELECT
+				  A.MSG_SEQ
+				, A.USER_SEQ
+				, A.UNIV_CODE
+				, A.QUEUE_SEQ
+				, B.USER_EMAIL
+			FROM TBL_MESSAGE_TARGET A
+			LEFT JOIN TBL_USER B ON A.USER_SEQ = B.USER_SEQ
+			WHERE A.MSG_SEQ = #{messageSeq}
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />		
+	</select>
+	
+	<!-- 받는사람 -->
+	<select id="getSenderPersonalList" parameterType="map" resultType="umap">
+		/* messageMapper.getSenderPersonalList */
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+			SELECT DISTINCT
+				  A.UNIV_CODE
+				, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+				, A.USER_DEPARTMENT
+				, A.USER_SEQ
+				, (SELECT USER_ID FROM TBL_USER WHERE USER_SEQ = A.USER_SEQ) AS USER_ID
+				, A.USER_NAME
+				, A.STUDENT_NUMBER
+				, (SELECT CELL_NO FROM TBL_USER WHERE USER_SEQ = A.USER_SEQ) AS CELL_NO
+			 FROM
+			 	TBL_EXCHANGE_RESULT A, TBL_USER B
+			WHERE
+				A.USER_SEQ = B.USER_SEQ
+			AND B.STATUS_CODE = 'UST01000001' 
+		
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />	
+	</select>
+	
+	<select id="getSenderList" parameterType="map" resultType="umap">
+		/* messageMapper.getSenderList */
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+			SELECT DISTINCT
+				  A.UNIV_CODE
+				, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+				, A.USER_UNIV_CODE
+				, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.USER_UNIV_CODE) AS USER_UNIV_CODE_NAME
+				, A.SEMESTER_CODE
+				, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SEMESTER_CODE) AS SEMESTER_CODE_NAME
+				, A.SUBJECT_NAME
+				, A.USER_DEPARTMENT
+				, A.USER_SEQ
+				, C.USER_ID
+				, A.USER_NAME
+				, A.STUDENT_NUMBER
+				, B.MOU_STUDENT_NUMBER
+				, C.CELL_NO
+				, A.REGIST_SCORE_YN
+			 FROM
+				TBL_EXCHANGE_RESULT A
+           		    LEFT OUTER JOIN TBL_MOU_STUDENT_NUMBER B
+                          ON A.UNIV_CODE = B.MOU_UNIV_CODE AND A.USER_UNIV_CODE = B.USER_UNIV_CODE AND A.STUDENT_NUMBER = B.STUDENT_NUMBER
+					LEFT OUTER JOIN TBL_USER C ON A.STUDENT_NUMBER = C.STUDENT_NUMBER
+			WHERE
+				A.REGIST_SCORE_YN = 'Y' 
+			AND B.MOU_STUDENT_NUMBER IS NOT NULL
+		
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />		
+	</select>
+	
+	<select id="getCheckedSenderList" parameterType="map" resultType="umap">
+		SELECT DISTINCT
+			  A.USER_UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.USER_UNIV_CODE) AS USER_UNIV_CODE_NAME
+			, A.USER_DEPARTMENT
+			, A.USER_SEQ
+			, C.USER_ID
+			, A.USER_NAME
+			, C.CELL_NO
+			, B.MOU_STUDENT_NUMBER
+		 FROM
+			TBL_EXCHANGE_RESULT A
+          		    LEFT OUTER JOIN TBL_MOU_STUDENT_NUMBER B
+                         ON A.UNIV_CODE = B.MOU_UNIV_CODE AND A.USER_UNIV_CODE = B.USER_UNIV_CODE AND A.STUDENT_NUMBER = B.STUDENT_NUMBER
+				LEFT OUTER JOIN TBL_USER C ON A.STUDENT_NUMBER = C.STUDENT_NUMBER
+		WHERE
+			A.REGIST_SCORE_YN = 'Y'
+		AND B.MOU_STUDENT_NUMBER IS NOT NULL
+		AND A.STUDENT_NUMBER = #{studentNumber}
+	</select>
+	
+	<insert id="sendSms" parameterType="map">
+		<!-- LMS 전송 -->
+    	INSERT INTO
+    		tms.dbo.TMS_QUEUE
+	    		(
+	    			  SITE_ID
+	    			, LINK_ID
+	    			, CHANNEL_TYPE, MSG_CODE
+	    			, TO_NAME
+	    			, TO_PHONE
+	    			, FROM_PHONE
+	    			, TITLE
+	    			, CONTENT
+	    			, TARGET_YN
+	    			, REQ_DATE
+	    			, REG_DATE
+	    		)
+			VALUES
+				(
+					  1
+					, #{mouStNum}
+					, 'LM', 'S0001'
+					, #{toName}
+					, #{toPhone}
+					, #{fromPhone}
+					, #{title}
+					, #{content}
+					, 'N'
+					<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(reqDate)">
+					, #{reqDate}
+					</if>
+					<if test="@org.apache.commons.lang3.StringUtils@isEmpty(reqDate)">
+					, GETDATE()
+					</if>
+					, GETDATE()
+				)
+
+			<!-- 알림톡	 -->
+<!-- 			INSERT INTO  -->
+<!-- 				tms.dbo.TMS_QUEUE ( SITE_ID, LINK_ID, CHANNEL_TYPE, MSG_CODE, TO_NAME, -->
+<!-- 									TO_PHONE, SENDER_KEY, TEMPLATE_CODE, SWITCH_YN, TARGET_YN, -->
+<!-- 									REQ_DATE, REG_DATE,  -->
+<!-- 									MAP1, MAP2, MAP3, MAP4, MAP5  -->
+<!-- 								  ) -->
+<!-- 						VALUES	  ( 1, #{mouStNum}, 'KA', 'K0001', #{toName}, -->
+<!-- 									#{toPhone}, '289ec651a6f90359068ed3a9c0a03dd0e607b0a4', 'B_GU_09_02_05385', 'N', 'N', -->
+<!-- 									GETDATE(), GETDATE(), -->
+<!-- 									'♥♥♥대학교', '♥♥♥개론', '2018년 ♥월 ♥일', '♥요일 오후♥시', '♥♥♥관 ♥♥♥호' -->
+<!-- 								  ) -->
+
+			<selectKey resultType="int" keyProperty="seq" order="AFTER">
+				SELECT IDENT_CURRENT('tms.dbo.TMS_QUEUE')
+ 			</selectKey>
+	</insert>
+	
+	<select id="getSmsResultList" parameterType="map" resultType="umap">
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+			SELECT
+				  A.MSG_SEQ
+				, CASE
+				  	WHEN A.REG_UNIV_CODE IS NOT NULL THEN A.REG_UNIV_CODE
+				  	ELSE '-'
+				  END AS REG_UNIV_CODE
+				, CASE
+					WHEN (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.REG_UNIV_CODE) IS NOT NULL THEN (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.REG_UNIV_CODE)
+					ELSE '-'
+				  END AS REG_UNIV_CODE_NAME
+				, CASE 
+					WHEN A.RESERVATION_TIME IS NOT NULL THEN '예약'
+					ELSE '즉시'
+				  END AS SEND_TYPE
+				, (CONVERT(VARCHAR, A.REG_DT, 120)) AS REG_DT
+				, CASE
+					WHEN A.RESERVATION_TIME IS NOT NULL THEN A.RESERVATION_TIME
+					ELSE ('-')
+				  END AS SEND_DT
+				, A.REG_USER_SEQ
+				, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+				, A.TITLE
+				, SELECT_YN
+				, SEND_YN
+			 FROM
+			 	TBL_MESSAGE A
+			 WHERE
+			 	A.MSG_TYPE = 1
+			 AND
+			 	A.REG_DT > CONVERT(NVARCHAR,dateadd(m,-1,getdate()),112 )
+			 
+		 <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />		
+	</select>
+	
+	<select id="getSendResultInfo" parameterType="map" resultType="umap">
+		SELECT DISTINCT
+			  ROW_NUMBER() OVER(ORDER BY A.USER_SEQ ASC) AS ROW_NUMBER
+			, A.MSG_SEQ
+			, A.USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.USER_SEQ) AS USER_NAME
+			, (SELECT USER_ID FROM TBL_USER WHERE USER_SEQ = A.USER_SEQ) AS USER_ID
+			, A.UNIV_CODE
+			, CASE WHEN (SELECT CODE_NAME FROM TBL_CODE WHERE DEL_YN = 'N' AND USE_YN = 'Y' AND CODE = A.UNIV_CODE) IS NOT NULL THEN (SELECT CODE_NAME FROM TBL_CODE WHERE DEL_YN = 'N' AND USE_YN = 'Y' AND CODE = A.UNIV_CODE)
+				   ELSE ('-')
+			  END AS UNIV_CODE_NAME
+			, (SELECT DEPARTMENT FROM TBL_USER WHERE USER_SEQ = A.USER_SEQ) AS USER_DEPARTMENT
+			, (SELECT STUDENT_NUMBER FROM TBL_USER WHERE USER_SEQ = A.USER_SEQ) AS STUDENT_NUMBER
+			, (SELECT MOU_STUDENT_NUMBER FROM TBL_MOU_STUDENT_NUMBER WHERE STUDENT_NUMBER = (SELECT STUDENT_NUMBER FROM TBL_USER WHERE USER_SEQ = A.USER_SEQ)) AS MOU_STUDENT_NUMBER
+			, (SELECT CELL_NO FROM TBL_USER WHERE USER_SEQ = A.USER_SEQ) AS CELL_NO
+			, CASE WHEN B.SEND_YN = 'Y' THEN '성공' ELSE ('대기') END AS SEND_STATUS
+		  FROM
+			TBL_MESSAGE_TARGET A INNER JOIN TBL_MESSAGE B ON A.MSG_SEQ = B.MSG_SEQ
+		  WHERE
+			A.MSG_SEQ = #{msgSeq}
+	</select>
+	
+</mapper>

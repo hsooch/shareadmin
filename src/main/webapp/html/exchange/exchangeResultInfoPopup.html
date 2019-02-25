@@ -1,0 +1,103 @@
+<div class="_popup _langko">
+    <div id="_wrap">
+        <div class="_popupInner">
+            <div class="_popHeader" ng-show="$root.exchange.resultPageType == 'in'">
+                <span class="pop_Title"> 학점교류 수강결과 상세보기</span>
+                <a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+            </div>
+            <div class="_popHeader" ng-show="$root.exchange.resultPageType == 'out'">
+                <span class="pop_Title"> 최종결과 상세보기</span>
+                <a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+            </div>
+            <div class="_popContent">
+                <div class="popconBox">
+			        <div id="_articleContent" class="_articleContent" style="padding-top:0px;">
+			            <div class="_insert">
+			                <div class="_table">
+			                    <h2 class="cont_Title">기본정보</h2>
+			                    <table class="_table _view w100">
+			                        <caption>기본정보 표</caption>
+			                        <colgroup>
+			                            <col style="width:150px;">
+			                            <col>
+			                            <col style="width:150px;">
+			                            <col>
+			                        </colgroup>
+			                        <tbody>
+			                            <tr>
+			                                <th>소속대학<span class="mark"></span></th>
+			                                <td colspan="3">{{$root.exchange.exchangeResultInfo.userUnivCodeName}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>학과<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.userDepartment}}</td>
+			                                <th>학년<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.studentGradeCode}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>성명<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.userName}}</td>
+			                                <th>소속대학 학번<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.studentNumber}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>결과 등록자<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.resultRegUserName}}</td>
+			                                <th>결과 등록일<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.resultRegDt}}</td>
+			                            </tr>
+			                        </tbody>
+			                    </table>
+			                    <h2 class="cont_Title">수강결과정보</h2>
+			                    <table class="_table _view w100">
+			                        <caption>신청정보 표</caption>
+			                        <colgroup>
+			                            <col style="width:150px;">
+			                            <col>
+			                            <col style="width:150px;">
+			                            <col>
+			                        </colgroup>
+			                        <tbody>
+			                           <tr>
+			                                <th>교류대학<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.univCodeName}}</td>
+			                                <th>교과번호<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.subjectNum}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>이수구분<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.completeType}}</td>
+			                                <th>과목명<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.subjectName}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>학점<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.subjectPoint}}</td>
+			                                <th>분반<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.classNum}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>학과<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.subjectDepartment}}</td>
+			                                <th>담당교수<span class="mark"></span></th>
+			                                <td>{{$root.exchange.exchangeResultInfo.teacherName}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>교류대학 학번<span class="mark"></span></th>
+			                                <td colspan="3">{{$root.exchange.exchangeResultInfo.mInStNum}}</td>
+			                            </tr>
+			                        </tbody>
+			                    </table>
+			                </div>
+			            </div>
+			            <div class="_areaButton">
+			                <div class="_center">
+			                    <span class="_button _large blackBtn"><a ng-click="closeThisDialog();">닫기</a></span>
+			                </div>
+			            </div>
+			        </div><!-- #_articleContent" -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

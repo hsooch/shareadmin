@@ -1,0 +1,115 @@
+<div class="_popup _langko">
+	<div id="_wrap">
+		<div class="_popupInner">
+			<div class="_popHeader">
+				<span class="pop_Title"> 신청정보 상세보기</span>
+				<a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+			</div>
+			<div class="_popContent">
+				<div class="popconBox">
+					<div id="_articleContent" class="_articleContent">
+						<div class="_insert">
+		                    <div class="_table">
+		                        <h2 class="cont_Title">기본정보</h2>
+		                        <table class="_table _view w100">
+		                            <caption>기본정보 표</caption>
+		                            <colgroup>
+		                                <col style="width:150px;">
+		                                <col>
+		                                <col style="width:150px;">
+		                                <col>
+		                            </colgroup>
+		                            <tbody>
+		                                <tr>
+		                                    <th>접수일자<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.regDt}}</td>
+		                                    <th>소속대학<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.userUnivCodeName}}</td>
+		                                </tr>
+		                                <tr>
+		                                    <th>학과<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.userDepartment}}</td>
+		                                    <th>학년<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.studentGradeCodeName}}</td>
+		                                </tr>
+		                                <tr>
+		                                    <th>성명<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.userName}}</td>
+		                                    <th>소속대학 학번<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.studentNumber}}</td>
+		                                </tr>
+		                                <tr>
+		                                    <th>승인/반려<span class="mark"></span></th>
+		                                    <td colspan="{{searchPage == 'confirmOut' ? 1 : 3}}"><span ng-repeat="applyStatus in applyStatusList | orderBy:descRn:false" 
+													ng-if="exchangeInfo.confmRejectStatus === applyStatus.code" >
+													{{applyStatus.codeName}}
+												</span></td>
+		                                    <th ng-if="searchPage == 'confirmOut'">이관처리<span class="mark"></span></th>
+		                                    <td ng-if="searchPage == 'confirmOut'">{{exchangeInfo.transferStatusName}}</td>
+		                                </tr>
+		                                <tr>
+		                                    <th>승인/반려 담당자<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.apCofmUserName}}</td>
+		                                    <th>승인/반려일<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.apCofmDt}}</td>
+		                                </tr>
+		                            </tbody>
+		                        </table>
+		                        <h2 class="cont_Title">신청정보</h2>
+		                        <table class="_table _view w100">
+		                            <caption>신청정보 표</caption>
+		                            <colgroup>
+		                                <col style="width:150px;">
+		                                <col>
+		                                <col style="width:150px;">
+		                                <col>
+		                            </colgroup>
+		                            <tbody>
+		                               <tr>
+		                                    <th>교류대학<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.univCodeName}}</td>
+		                                    <th>교과번호<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.subjectNum}}</td>
+		                                </tr>
+		                                <tr>
+		                                    <th>이수구분<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.completeType}}</td>
+		                                    <th>과목명<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.subjectName}}</td>
+		                                </tr>
+		                                <tr>
+		                                    <th>학점<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.subjectPoint}}</td>
+		                                    <th>분반<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.classNum}}</td>
+		                                </tr>
+		                                <tr>
+		                                    <th>학과<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.subjectDepartment}}</td>
+		                                    <th>담당교수<span class="mark"></span></th>
+		                                    <td>{{exchangeInfo.teacherName}}</td>
+		                                </tr>
+		                                <tr>
+		                                    <th>요일 및 시간<span class="mark"></span></th>
+		                                    <td colspan="3">
+		                                    	<p ng-repeat="timeInfo in exchangeInfo.timeList | orderBy:descRn:false">
+													{{timeInfo.dayOfWeekName}} {{timeInfo.startTimeHour}}:{{timeInfo.startTimeMinute}}~{{timeInfo.endTimeHour}}:{{timeInfo.endTimeMinute}} {{timeInfo.classRoom}}
+												</p>
+		                                    </td>
+		                                </tr>
+		                            </tbody>
+		                        </table>
+		                    </div>
+						</div>
+
+						<div class="_areaButton">
+							<div class="_center">
+								<span class="_button _large blackBtn"><a href="javascript:void(0);" ng-click="closeThisDialog()" >닫기</a></span>
+							</div>
+						</div>
+					</div><!-- #_articleContent" -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

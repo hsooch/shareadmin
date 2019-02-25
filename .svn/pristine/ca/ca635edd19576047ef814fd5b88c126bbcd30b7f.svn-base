@@ -1,0 +1,19 @@
+<!-- layer popup -->
+
+<div class="modal fade" style="display:block;" tabindex="-10" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+    		<button type="button" class="close" data-dismiss="modal" aria-label="Close" ng-click="submitClick();"><span aria-hidden="true">×</span></button>
+	   		<i class="icon-notice"><img ng-src="{{$root.Const.contextPath + 'images/icon_notice.jpg'}}" alt=""></i>
+   			<p class="modal-message">서비스 이용에 불편을 드려 죄송합니다.</p>
+           	<p class="modal-message">예기치 않은 오류가 발생 했습니다.</p>
+           	<p class="modal-message">에러 Code: {{resultCode}}</p>
+           	<p class="modal-message" style="white-space: pre-line; word-break: break-word;">에러 ID: {{logKey}}</p>
+			<div class="btn-area">
+				<a href="javascript:void(0);" class="btn btn-blue btn-sm" ng-click="submitClick();"><span>확인</span></a>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- //layer popup -->

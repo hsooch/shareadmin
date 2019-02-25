@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="authorityMapper">
+
+    <select id="getManagerList" parameterType="map" resultType="umap">
+    	<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+		SELECT
+			U.USER_SEQ AS userSeq,
+			(SELECT CODE_NAME FROM TBL_CODE WHERE CODE = U.UNIV_CODE) AS univName,
+			U.MANAGER_AUTHORITY_TYPE AS managerType,
+			U.USER_NAME AS userName,
+			U.DEPARTMENT AS department,
+			U.USER_ID AS userId
+		FROM TBL_USER U
+			LEFT JOIN TBL_CODE C ON (C.CODE = U.UNIV_CODE)
+		WHERE U.STATUS_CODE = #{userStatusCode}
+		AND (U.USER_TYPE = #{universityType} OR U.USER_TYPE = #{lifelongLearningType})
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(managerType)">
+			AND U.MANAGER_AUTHORITY_TYPE = #{managerType}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(keyword)">
+			<choose>
+				<when test='keywordType == "1"'>
+					AND U.USER_ID LIKE '%'+ #{keyword} + '%'
+				</when>
+				<when test='keywordType == "2"'>
+					AND U.USER_NAME LIKE '%'+ #{keyword} + '%'
+				</when>
+				<when test='keywordType == "3"'>
+					AND U.DEPARTMENT LIKE '%'+ #{keyword} + '%'
+				</when>
+				<otherwise>
+					AND (	U.USER_ID LIKE '%'+ #{keyword} + '%' OR
+							U.USER_NAME LIKE '%'+ #{keyword} + '%' OR
+							U.DEPARTMENT LIKE '%'+ #{keyword} + '%'
+					)
+				</otherwise>
+			</choose>
+		</if>
+		<choose>
+			<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(univCode)">
+				AND U.UNIV_CODE = #{univCode}
+			</when>
+			<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(areaCode)">
+				AND C.PARENT_CODE = #{areaCode}
+			</when>
+		</choose>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+    
+    <update id="updateAuthorityType" parameterType="map">
+    	UPDATE TBL_USER
+    	SET
+    		MANAGER_AUTHORITY_TYPE = #{managerType}
+    	WHERE USER_SEQ = #{userSeq}
+    </update>
+    
+    <select id="selectGroupList" parameterType="map" resultType="umap">
+    /* authorityMapper.selectGroupList */
+   		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+		SELECT
+			  A.GROUP_SEQ
+			, A.GROUP_NAME
+			, A.GROUP_DESC
+			, DEFAULT_YN
+			, A.USE_YN
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, REG_DT, 120) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, MOD_DT, 120) AS MOD_DT
+			, (SELECT COUNT(*) FROM TBL_GROUP_USER WHERE GROUP_SEQ = A.GROUP_SEQ) AS HAVE_USER_CNT
+		FROM
+			TBL_GROUP A
+		WHERE A.GROUP_SEQ IS NOT NULL
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+        	AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+        	AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUseYn)">
+        	AND A.USE_YN = #{searchUseYn}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKeywords)">
+        	<choose>
+        		<when test='searchOption == "name"'>
+        			AND A.GROUP_NAME LIKE '%'+ #{searchKeywords} + '%'
+        		</when>
+        		<when test='searchOption == "desc"'>
+        			AND A.GROUP_DESC LIKE '%'+ #{searchKeywords} + '%'
+        		</when>
+        		<otherwise>
+					AND (	
+						A.GROUP_NAME LIKE '%'+ #{searchKeywords} + '%' OR
+						A.GROUP_DESC LIKE '%'+ #{searchKeywords} + '%'
+					)
+				</otherwise>
+        	</choose>
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchOption)">
+       		 <choose>
+       			 <when test='searchOption == "user"'>
+       				AND A.REG_USER_SEQ = #{searchUser}
+       			</when>
+       		 </choose>
+        </if>
+        <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" /> 
+    </select>
+    
+    <select id="selectGroupInfo" parameterType="map" resultType="umap">
+    /* authorityMapper.selectGroupInfo */
+    	SELECT
+    		  A.GROUP_SEQ
+			, A.GROUP_NAME
+			, A.GROUP_DESC
+			, DEFAULT_YN
+			, A.USE_YN
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_AREA_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE)) AS UNIV_AREA_NAME
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, REG_DT, 120) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, MOD_DT, 120) AS MOD_DT
+			, (SELECT COUNT(*) FROM TBL_GROUP_USER WHERE GROUP_SEQ = A.GROUP_SEQ) AS HAVE_USER_CNT
+		FROM
+			TBL_GROUP A
+		WHERE A.GROUP_SEQ = #{groupSeq}
+    </select>
+    
+    <select id="selectGroupMenuList" parameterType="integer" resultType="umap">
+    	SELECT DISTINCT MENU_SEQ
+    	FROM TBL_MENU_PERMISION_GROUP
+    	WHERE GROUP_SEQ = #{groupSeq}
+    	ORDER BY MENU_SEQ
+    </select>
+    
+    <select id="selectParentMenuList" parameterType="integer" resultType="umap">
+    	SELECT DISTINCT PARENT_SEQ
+    	FROM TBL_MENU_PERMISION_GROUP A, TBL_MENU B
+    	WHERE GROUP_SEQ = #{groupSeq}
+		AND A.MENU_SEQ = B.MENU_SEQ
+		ORDER BY PARENT_SEQ
+    </select>
+    
+    <update id="upsertGroupInfo" parameterType="map">
+    /* authorityMapper.upsertGroupInfo */
+   		DECLARE @SEQ INT
+    		SET @SEQ = #{groupSeq}
+    		
+    	IF NOT EXISTS (SELECT 1 FROM TBL_GROUP WHERE GROUP_SEQ = @SEQ)
+    		INSERT INTO TBL_GROUP(
+    			  UNIV_CODE
+    			, GROUP_NAME
+    			, GROUP_DESC
+    			, USE_YN
+    			, REG_USER_SEQ
+    			, REG_DT
+    		)
+    		VALUES(
+    			  #{univCode}
+    			, #{groupName}
+    			, #{groupDesc}
+    			, #{useYn}
+    			, #{regUserSeq}
+    			, GETDATE()
+    		)
+    	ELSE
+		UPDATE TBL_GROUP
+		SET
+			MOD_USER_SEQ = #{regUserSeq}, MOD_DT = GETDATE()
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(univCode)">
+				,UNIV_CODE	= #{univCode}
+	   		</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(groupName)">
+				,GROUP_NAME = #{groupName}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(groupDesc)">
+				,GROUP_DESC = #{groupDesc}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(useYn)">
+				,USE_YN = #{useYn}
+			</if>
+		WHERE
+			GROUP_SEQ = @SEQ
+    		<selectKey resultType="int" keyProperty="groupSeq" order="AFTER">
+				<if test="@org.apache.commons.lang3.StringUtils@isEmpty(groupSeq)">
+  					SELECT IDENT_CURRENT('TBL_GROUP')
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(groupSeq)">
+					SELECT #{groupSeq}
+				</if>
+ 			</selectKey>
+	</update>
+	
+	<delete id="deleteGroup" parameterType="map">
+		DELETE FROM TBL_GROUP
+		WHERE GROUP_SEQ = #{groupSeq}
+	</delete>
+	
+	<delete id="deletePermisionGroup" parameterType="map">
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(groupSeq)">
+			DELETE FROM TBL_MENU_PERMISION_GROUP
+			WHERE GROUP_SEQ = #{groupSeq}
+		</if>
+	</delete>
+	
+	<update id="savePermisionGroup" parameterType="map">
+   		INSERT INTO TBL_MENU_PERMISION_GROUP
+  				(
+   				  MENU_SEQ
+				, GROUP_SEQ
+  				)
+   		VALUES
+				(
+				  #{menuSeq}
+   				, #{groupSeq}
+  				)	
+    </update>
+    
+    <select id="selectMenuAuthForGroup" parameterType="map" resultType="umap">
+    /* authorityMapper.selectMenuAuthForGroup */
+    	WITH recursive_query(MENU_SEQ,PARENT_SEQ,MENU_NAME, DEPTH, MENU_INDEX) AS 
+    	(
+		  SELECT 
+		         MENU_SEQ
+		       , PARENT_SEQ
+		       , MENU_NAME
+			   , DEPTH
+			   , MENU_INDEX
+		    FROM TBL_MENU
+		    WHERE DEPTH = 1
+		    UNION ALL
+		    SELECT
+		          b.MENU_SEQ
+		        , b.PARENT_SEQ
+		        , b.MENU_NAME
+				, b.DEPTH
+				, b.MENU_INDEX
+		    FROM  TBL_MENU b, recursive_query c
+		    WHERE b.PARENT_SEQ = c.MENU_SEQ
+		    AND DEL_YN = 'N'
+		    AND DISPLAY_YN = 'Y'
+		)
+		SELECT PARENT_SEQ, MENU_SEQ, MENU_NAME, MENU_INDEX, DEPTH FROM recursive_query order by PARENT_SEQ, MENU_INDEX, DEPTH
+    </select>
+    
+    <select id="selectUnivManagerList" parameterType="map" resultType="umap">
+    	SELECT 
+    		  USER_SEQ
+    		, USER_NAME
+    		, USER_EMAIL
+    		, USER_ID
+    		, USER_TYPE
+    		, B.CODE_NAME
+    		, A.UNIV_CODE
+    		, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+    		, MANAGER_AUTHORITY_TYPE
+    	FROM
+    		TBL_USER A , TBL_CODE B
+    	WHERE
+    		A.USER_TYPE = B.CODE
+    	AND
+    		A.USER_TYPE  !=  'UGR01000004' AND A.USER_TYPE != 'UGR01000005'
+    	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+        	AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+        	AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKeywords)">
+        	<choose>
+        		<when test='searchOption == "name"'>
+        			AND A.USER_NAME LIKE '%'+ #{searchKeywords} + '%'
+        		</when>
+        		<when test='searchOption == "id"'>
+        			AND A.USER_ID LIKE '%'+ #{searchKeywords} + '%'
+        		</when>
+        		<otherwise>
+					AND (	A.USER_ID LIKE '%'+ #{searchKeywords} + '%' OR
+							A.USER_NAME LIKE '%'+ #{searchKeywords} + '%'
+					)
+				</otherwise>
+        	</choose>
+        </if>
+    	ORDER BY
+    		UNIV_CODE_NAME, USER_NAME
+    	
+    </select>
+    
+    <select id="selectUnivMgrInfo" parameterType="map" resultType="umap">
+    	SELECT
+    		  USER_SEQ
+    		, USER_NAME
+    		, USER_EMAIL
+    		, USER_ID
+    		, USER_TYPE
+    		, A.UNIV_CODE
+    		, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+    		, MANAGER_AUTHORITY_TYPE
+    	FROM
+    		TBL_USER A
+    	WHERE
+    		USER_SEQ = #{userSeq}
+    </select>
+    
+    <select id="selectMenuAuthForUser" parameterType="map" resultType="umap">
+    /* authorityMapper.selectMenuAuthForUser */
+		  SELECT *
+		    FROM TBL_MENU_PERMISION_USER
+		    WHERE USER_SEQ = #{userSeq}
+    </select>
+    
+    <select id="selectUnAttachedGroupList" parameterType="map" resultType="umap">
+  		SELECT
+			  A.GROUP_SEQ
+			, A.GROUP_NAME
+			, DEFAULT_YN
+			, A.USE_YN
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, A.REG_USER_SEQ
+		FROM
+			TBL_GROUP A
+		WHERE A.GROUP_SEQ IS NOT NULL
+		AND A.UNIV_CODE = #{univCode}
+		AND A.USE_YN = 'Y'
+		AND NOT EXISTS(SELECT 1
+						 FROM TBL_GROUP_USER B
+						WHERE B.USER_SEQ = #{userSeq} AND A.GROUP_SEQ = B.GROUP_SEQ)
+    </select>
+    
+    <insert id="addGroup" parameterType="Map">
+		INSERT INTO TBL_GROUP_USER (
+			  GROUP_SEQ
+			, USER_SEQ
+		)
+		VALUES (
+			  #{groupSeq}
+			, #{userSeq}
+		)
+	</insert>
+	
+	<select id="selectAttachedGroupList" parameterType="Map" resultType="umap">
+		SELECT
+			  A.GROUP_SEQ
+			, GROUP_NAME
+		FROM TBL_GROUP A, TBL_GROUP_USER B
+		WHERE 
+			USER_SEQ = #{userSeq}
+		AND
+			A.GROUP_SEQ = B.GROUP_SEQ
+	</select>
+
+	<delete id="removeGroup" parameterType="map">
+		DELETE FROM TBL_GROUP_USER
+		 WHERE USER_SEQ = #{userSeq}
+		   AND GROUP_SEQ = #{groupSeq}
+	</delete>
+	
+	<select id="getRemoveGroupMenus" parameterType="map" resultType="umap">
+		SELECT MENU_SEQ
+		  FROM TBL_MENU_PERMISION_GROUP
+		 WHERE GROUP_SEQ = #{groupSeq} 
+	</select>
+
+	<select id="selectUserMenuInfo" parameterType="map" resultType="umap">
+    /* authorityMapper.selectUserMenuInfo */
+    	SELECT
+    		  A.GROUP_SEQ
+			, A.GROUP_NAME
+			, A.GROUP_DESC
+			, DEFAULT_YN
+			, A.USE_YN
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_AREA_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE)) AS UNIV_AREA_NAME
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, REG_DT, 120) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, MOD_DT, 120) AS MOD_DT
+		FROM
+			TBL_GROUP A
+		WHERE A.GROUP_SEQ = #{groupSeq}
+    </select>
+    
+    <delete id="deletePermisionUsers" parameterType="map">
+<!--   		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userSeq)"> -->
+			DELETE FROM TBL_MENU_PERMISION_USER
+			WHERE USER_SEQ = #{userSeq}
+<!-- 		</if> -->
+    </delete>
+    
+    <insert id="insertMenuAuthForUser" parameterType="map">
+	    IF NOT EXISTS (SELECT 1 FROM TBL_MENU_PERMISION_USER WHERE MENU_SEQ = #{menuSeq} AND USER_SEQ = #{userSeq})
+	   		INSERT INTO TBL_MENU_PERMISION_USER
+	 			(MENU_SEQ, USER_SEQ)
+	  		VALUES
+				(#{menuSeq}, #{userSeq})	
+    </insert>
+    
+    <delete id="deleteMenuAuthForUser" parameterType="map">
+    	DELETE FROM TBL_MENU_PERMISION_USER
+		 WHERE MENU_SEQ = #{menuSeq}
+		   AND USER_SEQ = #{userSeq}    		
+    </delete>
+
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

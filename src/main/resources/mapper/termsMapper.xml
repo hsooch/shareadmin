@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="termsMapper">
+
+    <select id="selectTermsList" parameterType="map" resultType="termsVO">
+        /* termsMapper.selectTermsList */
+        SELECT 
+       		  TERMS_SEQ
+        	, TERMS_TYPE
+        	, TERMS_TITLE
+        	, TERMS_CONTENT
+        	, REQUIRED_YN
+        	, TERMS_INDEX
+        	, USE_YN
+        	, DEL_YN
+        	, REPLACE(CONVERT(VARCHAR, REG_DT, 120), '-', '.') AS REG_DT
+        	, REG_USER_SEQ
+        	, REPLACE(CONVERT(VARCHAR, MOD_DT, 120), '-', '.') AS MOD_DT
+			, MOD_USER_SEQ
+        FROM TBL_TERMS
+        WHERE 1=1
+        <if test="termsType != null and termsType != ''">
+        	AND TERMS_TYPE = #{termsType}
+        </if>
+        <if test="termsTitle != null and termsTitle != ''">
+        	AND TERMS_TITLE LIKE ('%' + #{termsTitle} + '%')
+        </if>
+        ORDER BY TERMS_INDEX ASC
+    </select>
+    
+</mapper>

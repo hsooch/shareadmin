@@ -1,0 +1,44 @@
+<div>
+	<div class="layer-wrap">
+		<div class="section-wrap idpw-wrap">
+			<div class="inner">
+				<a href="javascript:void(0);" ng-click="closeLayerPopup()" class="btn-layer-x" tabindex="-10"><span><span class="hidden">창닫기</span></span></a>
+				<!-- 계정잠금 해제 인증 : 본인 인증 -->
+				<div class="layer-container" ng-show="pwdErrPermitedCnt_step == 1">
+					<h2 class="title">계정잠금 해제</h2>
+					<p class="tx-idpw">* 비밀번호를 5회 이상 잘못 입력하여 계정이 잠겼습니다.<br /> 본인인증 후 임시번호를 발급받아 로그인 해주세요.</p>
+					<section class="section-confirm">
+						<div class="box box1">
+							<h3 class="title-confirm">휴대폰 인증</h3>
+							<button type="button" class="btn btn-blue" ng-click="cellPhoneCertificate()">인증하기</button>
+						</div>
+						<div class="box box2">
+							<h3 class="title-confirm">EPKI 인증</h3>
+							<button type="button" class="btn btn-blue" ng-click="epkiCertificate()">인증하기</button>
+						</div>
+					</section>
+				</div>
+				<!-- //계정잠금 해제 인증 : 본인 인증-->
+			
+				<!-- 계정잠금 해제 결과 : 찾기 완료 -->
+				<div class="layer-container" ng-show="pwdErrPermitedCnt_step == 2">
+					<h2 class="title">계정잠금 해제 인증</h2>
+					<div class="result-area">
+						<p class="tx-finish">회원가입 시 등록한 이메일로<br>임시비밀번호를 발급 하였습니다.</p>
+						<div class="idpw-result">
+							<span>이메일 : {{userEmail}}</span>
+						</div>
+						<p class="tx-idpw">* 임시 비밀번호로 로그인 하신 후 에는 반드시 비밀번호를 재설정 해주시기 바랍니다.</p>
+					</div>
+				</div>
+				<!-- //계정잠금 해제 결과 : 찾기 완료-->
+				
+				<div class="layer-footer">
+					<div class="btn-area">
+						<a href="#" class="btn btn-gray btn-layer-close" ng-click="closeLayerPopup();"><span>닫기</span></a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,31 @@
+<div class="_popup _langko">
+	<div id="_wrap">
+		<div class="_popupInner">
+			<div class="_popHeader">
+				<span class="pop_Title"> 담당자 전달 메시지</span>
+				<a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+			</div>
+			<div class="_popContent">
+				<div class="popconBox">
+					<header id="_popupHeader">
+						<h1>담당자 전달 메시지</h1>
+					</header>
+					<div id="_articleContent" class="_articleContent">
+						<div class="_insert">
+							<textarea ng-model="sendMessage" placeholder="담당자 전달 메시지를 입력하세요. (300자 제한)" ng-readonly="exchangeInfo.sendMessage != null"></textarea>
+						</div>
+						<div class="_areaButton">
+							<div class="_center" ng-if="exchangeInfo.sendMessage != null">
+								<span class="_button _large blackBtn"><a href="javascript:void(0);" ng-click="closeThisDialog()" >닫기</a></span>
+							</div>
+							<div class="_center" ng-if="exchangeInfo.sendMessage == null">
+								<span class="_button _large blackBtn"><a href="javascript:void(0);" ng-click="saveSendMessage()" >확인</a></span>
+								<span class="_button _large borderBtn"><a href="javascript:void(0);" ng-click="closeThisDialog()" >취소</a></span>
+							</div>
+						</div>
+					</div><!-- #_articleContent" -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

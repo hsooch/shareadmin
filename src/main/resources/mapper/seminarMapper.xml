@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="seminarMapper">
+
+    <select id="selectSeminarList" parameterType="map" resultType="umap">
+   	/* seminarMapper.selectSeminarList */
+   		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+    	SELECT DISTINCT
+    		A.SEMINAR_SEQ
+    		, CASE A.SEMINAR_TYPE 
+			  	WHEN 1 THEN 'seminar'
+			  	WHEN 2 THEN 'lecture'
+			  	WHEN 3 THEN 'contest'
+			  	WHEN 4 THEN 'competition'
+			  END AS SEMINAR_TYPE
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, A.TITLE
+			, A.APPLY_START_DAY
+			, A.APPLY_END_DAY
+			, A.CLASS_DAY
+			, A.MAX_USER_CNT
+			, A.CLASS_START_TIME
+			, A.CLASS_END_TIME
+			, (SELECT COUNT(*) FROM TBL_APPLY_SEMINAR WHERE SEMINAR_SEQ = A.SEMINAR_SEQ AND APPLY_STATUS = 2) AS WAIT_USER_CNT
+			, (SELECT COUNT(*) FROM TBL_APPLY_SEMINAR WHERE SEMINAR_SEQ = A.SEMINAR_SEQ AND APPLY_STATUS = 1) AS APPLY_USER_CNT
+			, (SELECT COUNT(*) FROM TBL_APPLY_SEMINAR WHERE SEMINAR_SEQ = A.SEMINAR_SEQ AND ATTENDANCE_YN = 'Y') AS ATTEND_USER_CNT
+			, CONVERT(VARCHAR, (SELECT MAX(ATTENDANCE_DT) FROM TBL_APPLY_SEMINAR WHERE SEMINAR_SEQ = A.SEMINAR_SEQ), 120) AS ATTEND_DT
+			, A.PLACE
+			, A.TEACHER_NAME
+			, A.ACCEPT_TYPE
+			, A.APPLY_AVAILABLE_TYPE
+			, A.EXCHANGE_YN
+			, A.DISPLAY_YN
+			, CASE 
+				WHEN CONVERT(VARCHAR, GETDATE(), 112) BETWEEN A.APPLY_START_DAY AND A.APPLY_END_DAY THEN '접수중'
+        		WHEN <![CDATA[CONVERT(VARCHAR, GETDATE(), 112) < A.APPLY_START_DAY]]> THEN '대기'
+        		WHEN <![CDATA[CONVERT(VARCHAR, GETDATE(), 112) > A.APPLY_END_DAY]]> THEN '마감'
+			  ELSE ''
+			  END AS SEMINAR_STATUS
+			, A.THUMBNAIL_FILE_KEY
+			, (SELECT DOWNLOAD_URL FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_URL
+			, (SELECT SAVE_PATH FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_PATH
+			, A.CONTENTS
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, A.REG_DT, 120) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, A.MOD_DT, 120) AS MOD_DT
+		FROM
+    		TBL_SEMINAR A LEFT JOIN TBL_FILE_INFO F ON (A.THUMBNAIL_FILE_KEY = F.FILE_KEY)
+		WHERE A.SEMINAR_TYPE IN(#{type1}, #{type2})
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+        	AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+        	AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSeminarType)">
+        	AND A.SEMINAR_TYPE = #{searchSeminarType}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchDisplayYn)">
+        	AND A.DISPLAY_YN = #{searchDisplayYn}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSeminarStatus)">
+        	<choose>
+        		<when test='searchSeminarStatus == "accepting"'>
+        			AND CONVERT(VARCHAR, GETDATE(), 112) BETWEEN A.APPLY_START_DAY AND A.APPLY_END_DAY
+        		</when>
+        		<when test='searchSeminarStatus == "wait"'>
+        			<![CDATA[AND CONVERT(VARCHAR, GETDATE(), 112) < A.APPLY_START_DAY]]>
+        		</when>
+        		<when test='searchSeminarStatus == "close"'>
+        			<![CDATA[AND CONVERT(VARCHAR, GETDATE(), 112) > A.APPLY_END_DAY]]>
+        		</when>
+        	</choose>
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKeywords)">
+        	<choose>
+        		<when test='searchEtcOption == "title"'>
+        			AND A.TITLE LIKE '%'+ #{searchKeywords} + '%'
+        		</when>
+        		<when test='searchEtcOption == "place"'>
+        			<![CDATA[AND A.PLACE LIKE '%'+ #{searchKeywords} + '%']]>
+        		</when>
+        		<when test='searchEtcOption == "teacher"'>
+        			<![CDATA[AND A.TEACHER_NAME LIKE '%'+ #{searchKeywords} + '%']]>
+        		</when>
+        		<otherwise>
+        			AND (
+        				A.TITLE LIKE '%' + #{searchKeywords} + '%' OR
+        				A.PLACE LIKE '%'+ #{searchKeywords} + '%' OR
+        				A.TEACHER_NAME LIKE '%'+ #{searchKeywords} + '%'
+        			)
+        		</otherwise>
+        	</choose>
+        </if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" /> 
+    </select>
+    
+ 	<update id="upsertSeminarInfo" parameterType="map">
+    	/* seminarMapper.upsertSeminarInfo */
+    	DECLARE @SEQ INT
+    	SET @SEQ = #{seminarSeq}
+
+    	IF NOT EXISTS (SELECT 1 FROM TBL_SEMINAR WHERE SEMINAR_SEQ = @SEQ)
+    		INSERT INTO TBL_SEMINAR(
+	    		SEMINAR_TYPE
+	    		, APPLY_YN
+				, UNIV_CODE	
+				, TITLE
+				, APPLY_START_DAY
+				, APPLY_END_DAY
+				, CLASS_DAY
+				, MAX_USER_CNT
+				, CLASS_START_TIME
+				, CLASS_END_TIME
+				, PLACE
+				, TEACHER_NAME
+				, ACCEPT_TYPE
+				, APPLY_AVAILABLE_TYPE
+				, EXCHANGE_YN
+				, DISPLAY_YN
+				, THUMBNAIL_FILE_KEY
+				, CONTENTS
+				, REG_USER_SEQ
+				, REG_DT
+    		)
+    		VALUES(
+				#{seminarType}
+				, #{applyYn}
+				, #{univCode}
+				, #{title}
+				, #{applyStartDay}
+				, #{applyEndDay}
+				, #{classDay}
+				, #{maxUserCnt}
+				, #{classStartTime}
+				, #{classEndTime}
+				, #{place}
+				, #{teacherName}
+				, #{acceptType}
+				, #{applyAvailableType}
+				, #{exchangeYn}
+				, #{displayYn}
+				, #{thumbnailFileKey}
+				, #{contents}
+				, #{regUserSeq}
+				, GETDATE()
+    		)
+    	ELSE
+	    	UPDATE TBL_SEMINAR
+	    	SET
+	    		MOD_DT = GETDATE(), MOD_USER_SEQ = #{modUserSeq}
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(seminarType)">
+	   			, SEMINAR_TYPE = #{seminarType}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(applyYn)">
+	   			, APPLY_YN = #{applyYn}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(univCode)">
+				, UNIV_CODE	= #{univCode}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(title)">
+				, TITLE	= #{title}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(applyStartDay)">
+				, APPLY_START_DAY = #{applyStartDay}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(applyEndDay)">
+				, APPLY_END_DAY	= #{applyEndDay}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(classDay)">
+				, CLASS_DAY	= #{classDay}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(maxUserCnt)">
+				, MAX_USER_CNT = #{maxUserCnt}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(classStartTime)">
+				, CLASS_START_TIME = #{classStartTime}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(classEndTime)">
+				, CLASS_END_TIME = #{classEndTime}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(place)">
+				, PLACE	= #{place}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(teacherName)">
+				, TEACHER_NAME = #{teacherName}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(acceptType)">
+				, ACCEPT_TYPE = #{acceptType}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(applyAvailableType)">
+				, APPLY_AVAILABLE_TYPE = #{applyAvailableType}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(exchangeYn)">
+				, EXCHANGE_YN = #{exchangeYn}
+	   			</if>
+	   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(displayYn)">
+				, DISPLAY_YN = #{displayYn}
+	   			</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(thumbnailFileKey)">
+				, THUMBNAIL_FILE_KEY = #{thumbnailFileKey}
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(contents)">
+				, CONTENTS = #{contents}
+	   			</if>
+			WHERE
+	    		SEMINAR_SEQ = @SEQ
+	    		
+    		<selectKey resultType="int" keyProperty="seqSeminar" order="AFTER">
+				<if test="@org.apache.commons.lang3.StringUtils@isEmpty(seminarSeq)">
+	 					SELECT IDENT_CURRENT('TBL_SEMINAR')
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(seminarSeq)">
+						SELECT #{seminarSeq}
+				</if>
+ 			</selectKey>
+    </update>
+    
+    <update id="saveSeminarFiles" parameterType="map">
+    	DECLARE @SEQ INT
+    	SET @SEQ = #{seminarSeq}
+
+    	IF NOT EXISTS (SELECT 1 FROM TBL_SEMINAR_FILE WHERE SEMINAR_SEQ = @SEQ AND FILE_KEY = #{seminarFileKey} )
+    		INSERT INTO TBL_SEMINAR_FILE(
+    			SEMINAR_SEQ
+    			, FILE_KEY
+    		)
+    		VALUES(
+    			@SEQ
+    			, #{seminarFileKey}
+    		)
+    	ELSE
+	    	UPDATE TBL_SEMINAR_FILE
+	    	SET
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(seminarFileKey)">
+    			FILE_KEY = #{seminarFileKey}
+   			</if>
+   			WHERE SEMINAR_SEQ = @SEQ
+    </update>
+    	
+    <!-- 세미나 정보를 조회한다 -->
+    <select id="getSeminarInfo" parameterType="map" resultType="umap">
+   	/* seminarMapper.getSeminarInfo */
+    	SELECT DISTINCT
+    		  A.SEMINAR_SEQ
+    		, CASE A.SEMINAR_TYPE 
+			  	WHEN 1 THEN 'seminar'
+			  	WHEN 2 THEN 'lecture'
+			  	WHEN 3 THEN 'contest'
+			  	WHEN 4 THEN 'competition'
+			  END AS SEMINAR_TYPE
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_AREA_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE)) AS UNIV_AREA_NAME
+			, A.TITLE
+			, A.APPLY_START_DAY
+			, A.APPLY_END_DAY
+			, A.CLASS_DAY
+			, A.MAX_USER_CNT
+			, A.CLASS_START_TIME
+			, A.CLASS_END_TIME
+			, A.PLACE
+			, A.TEACHER_NAME
+			, CASE A.APPLY_YN 
+			  	WHEN 'Y' THEN 'apply'
+			  	WHEN 'N' THEN 'noapply'
+			  END AS APPLY_YN
+			, CASE A.ACCEPT_TYPE 
+			  	WHEN 1 THEN 'auto'
+			  	WHEN 2 THEN 'admin'
+			  END AS ACCEPT_TYPE
+			, CASE A.APPLY_AVAILABLE_TYPE 
+			  	WHEN 1 THEN 'all'
+			  	WHEN 2 THEN 'only'
+			  END AS APPLY_AVAILABLE_TYPE
+			, CASE A.EXCHANGE_YN 
+			  	WHEN 'Y' THEN 'exchange'
+			  	WHEN 'N' THEN 'unexchange'
+			  END AS EXCHANGE_YN
+			, (SELECT COUNT(*) FROM TBL_APPLY_SEMINAR WHERE SEMINAR_SEQ = A.SEMINAR_SEQ AND APPLY_STATUS = 2) AS WAIT_USER_CNT
+			, (SELECT COUNT(*) FROM TBL_APPLY_SEMINAR WHERE SEMINAR_SEQ = A.SEMINAR_SEQ AND APPLY_STATUS = 1) AS APPLY_USER_CNT
+			, (SELECT COUNT(*) FROM TBL_APPLY_SEMINAR WHERE SEMINAR_SEQ = A.SEMINAR_SEQ AND ATTENDANCE_YN = 'Y') AS ATTEND_USER_CNT
+			, CONVERT(VARCHAR, (SELECT MAX(ATTENDANCE_DT) FROM TBL_APPLY_SEMINAR WHERE SEMINAR_SEQ = A.SEMINAR_SEQ), 120) AS ATTEND_DT
+			, CASE 
+				WHEN CONVERT(VARCHAR, GETDATE(), 112) BETWEEN A.APPLY_START_DAY AND A.APPLY_END_DAY THEN '접수중'
+        		WHEN <![CDATA[CONVERT(VARCHAR, GETDATE(), 112) < A.APPLY_START_DAY]]> THEN '대기'
+        		WHEN <![CDATA[CONVERT(VARCHAR, GETDATE(), 112) > A.APPLY_END_DAY]]> THEN '마감'
+			  ELSE ''
+			  END AS SEMINAR_STATUS
+			, CASE A.DISPLAY_YN 
+			  	WHEN 'Y' THEN 'display'
+			  	WHEN 'N' THEN 'none'
+			  END AS DISPLAY_YN
+			, A.THUMBNAIL_FILE_KEY
+			, (SELECT DOWNLOAD_URL FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_URL
+			, (SELECT ORI_FILE_NAME FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_FILE_NAME
+			, (SELECT SAVE_PATH FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_PATH
+			, A.CONTENTS
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, A.REG_DT, 120) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, A.MOD_DT, 120) AS MOD_DT
+		FROM
+			  TBL_SEMINAR A LEFT JOIN TBL_FILE_INFO F ON (A.THUMBNAIL_FILE_KEY = F.FILE_KEY)
+		WHERE A.SEMINAR_SEQ = #{seminarSeq}
+    </select>
+    
+    <!-- 세미나 정보에서 등록된 섬네일 파일을 제거 한다. -->
+	<update id="removeThumbnail" parameterType="Map">
+	/* seminarMapper.removeThumbnail */
+		UPDATE TBL_SEMINAR
+		SET THUMBNAIL_FILE_KEY = NULL
+		WHERE SEMINAR_SEQ = #{seminarSeq}
+	</update>
+    
+ 	<select id="getSeminarFileKeyList" parameterType="Integer" resultType="umap">
+    	/* seminarMapper.getSeminarFileKeyList */
+    	SELECT 
+    		  SEMINAR_SEQ
+    		, FILE_KEY
+    	FROM TBL_SEMINAR_FILE
+    	WHERE SEMINAR_SEQ = #{seminarSeq}
+    </select>
+    
+    <delete id="deleteSeminarFile" parameterType="map">
+		DELETE FROM TBL_SEMINAR_FILE
+		WHERE SEMINAR_SEQ = #{seminarSeq}
+		<if test="removeFileKeys != null">
+	    	<foreach item="fileKey" collection="removeFileKeys" open="AND FILE_KEY IN (" close=")" separator=",">
+	    		#{fileKey}
+	    	</foreach>
+    	</if>
+    </delete>
+    
+   	<delete id="deleteSeminarInfo" parameterType="map">
+    	/* seminarInfo.deleteSeminarInfo */
+    	DELETE FROM TBL_SEMINAR WHERE SEMINAR_SEQ = #{seminarSeq}
+    </delete>
+    
+    <select id="selectApplyUserList" parameterType="map" resultType="umap">
+  		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+    	SELECT
+    		  CONVERT(VARCHAR, REG_DT, 120) AS REG_DT
+    		, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, STUDENT_NUMBER
+			, USER_SEQ
+			, USER_NAME
+			, USER_EMAIL
+			, CELL_NO
+			, ATTENDANCE_YN
+			, CASE APPLY_STATUS 
+			  	WHEN 1 THEN '승인'
+			  	WHEN 2 THEN '대기'
+			  	ELSE '반려'
+			  END AS APPLY_STATUS
+			, CONVERT(VARCHAR, MOD_STATUS_DATE, 120) AS MOD_STATUS_DATE
+			, A.MOD_STATUS_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_STATUS_USER_SEQ) AS MOD_STATUS_USER_NAME
+		FROM 
+			TBL_APPLY_SEMINAR A
+		WHERE
+			SEMINAR_SEQ = #{seminarSeq}
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchApplyStatus)">
+       			AND A.APPLY_STATUS = #{searchApplyStatus}
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserName)">
+	        	AND A.USER_NAME LIKE '%'+ #{searchUserName} + '%'
+	        </if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+    
+    <update id="updateApplyStatus" parameterType="map">
+    	UPDATE TBL_APPLY_SEMINAR
+    	   SET 
+	    	     MOD_STATUS_USER_SEQ = #{modStatusUserSeq}
+	    	   , MOD_STATUS_DATE = GETDATE()
+	    	   , APPLY_STATUS = #{applyStatus}
+	     WHERE USER_SEQ = #{userSeq}
+	     		
+    </update>
+    
+    
+    <select id="selectAttendUserList" parameterType="map" resultType="umap">
+    	SELECT
+    		  ROW_NUMBER() OVER(ORDER BY USER_NAME ASC) AS ROW_NUMBER
+	  		, SEMINAR_SEQ
+	  	    , ATTENDANCE_YN
+	  	    , USER_SEQ
+			, USER_NAME
+	  		, UNIV_CODE
+	  		, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+	  		, STUDENT_NUMBER
+	  		, (SELECT USER_ID FROM TBL_USER WHERE USER_SEQ = A.USER_SEQ) AS USER_ID
+	 		, A.CERT_FILE_KEY
+	 		, (SELECT ORI_FILE_NAME FROM TBL_FILE_INFO WHERE FILE_KEY = A.CERT_FILE_KEY) AS CERT_FILE_NAME
+		 FROM TBL_APPLY_SEMINAR A LEFT JOIN TBL_FILE_INFO F ON (A.CERT_FILE_KEY = F.FILE_KEY) 
+	    WHERE SEMINAR_SEQ = #{seminarSeq}
+	    AND A.APPLY_STATUS = 1
+		ORDER BY ROW_NUMBER DESC
+    </select>
+	    
+	<update id="checkAttend" parameterType="map">
+		UPDATE TBL_APPLY_SEMINAR
+		SET   ATTENDANCE_YN = #{attendanceYn}
+			, ATTENDANCE_USER_SEQ = #{attendanceUserSeq}
+			, ATTENDANCE_DT = GETDATE()
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(certFileKey)">
+			, CERT_FILE_KEY = #{certFileKey}
+			</if>
+		WHERE
+			SEMINAR_SEQ = #{seminarSeq}
+		AND USER_SEQ = #{userSeq}
+		
+		<selectKey resultType="int" keyProperty="seqSeminar" order="AFTER">
+			<if test="@org.apache.commons.lang3.StringUtils@isEmpty(seminarSeq)">
+				SELECT IDENT_CURRENT('TBL_APPLY_SEMINAR')
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(seminarSeq)">
+				SELECT #{seminarSeq}
+			</if>
+		</selectKey>
+	</update> 
+	
+	<update id="unCheckAttend" parameterType="map">
+		UPDATE TBL_APPLY_SEMINAR
+		SET
+			ATTENDANCE_YN = #{attendanceYn}
+		WHERE
+			SEMINAR_SEQ = #{seminarSeq}
+		AND USER_SEQ = #{userSeq}
+	</update>
+	
+	<update id="removeCert" parameterType="map">
+		UPDATE TBL_APPLY_SEMINAR
+		SET CERT_FILE_KEY = null
+		WHERE SEMINAR_SEQ = #{seminarSeq}
+		AND USER_SEQ = #{userSeq}
+	</update>
+	    
+	    
+	<!-- 공모전 리스트 -->
+	<select id="getContestList" parameterType="map" resultType="umap">
+   	/* seminarMapper.getContestList */
+   		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+    	SELECT DISTINCT
+    		A.SEMINAR_SEQ
+    		, CASE A.SEMINAR_TYPE 
+			  	WHEN 3 THEN 'contest'
+			  	WHEN 4 THEN 'competition'
+			  END AS SEMINAR_TYPE
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, A.TITLE
+			, A.APPLY_START_DAY
+			, A.APPLY_END_DAY
+			, A.CLASS_DAY
+			, A.CLASS_START_TIME
+			, A.CLASS_END_TIME
+			, A.PLACE
+			, A.EXCHANGE_YN
+			, A.DISPLAY_YN
+			, CASE 
+				WHEN CONVERT(VARCHAR, GETDATE(), 112) BETWEEN A.APPLY_START_DAY AND A.APPLY_END_DAY THEN '접수중'
+        		WHEN <![CDATA[CONVERT(VARCHAR, GETDATE(), 112) < A.APPLY_START_DAY]]> THEN '대기'
+        		WHEN <![CDATA[CONVERT(VARCHAR, GETDATE(), 112) > A.APPLY_END_DAY]]> THEN '마감'
+			  ELSE ''
+			  END AS SEMINAR_STATUS
+			, A.THUMBNAIL_FILE_KEY
+			, (SELECT DOWNLOAD_URL FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_URL
+			, (SELECT SAVE_PATH FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_PATH
+			, A.CONTENTS
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, A.REG_DT, 120) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, A.MOD_DT, 120) AS MOD_DT
+		FROM
+    		TBL_SEMINAR A LEFT JOIN TBL_FILE_INFO F ON (A.THUMBNAIL_FILE_KEY = F.FILE_KEY)
+		WHERE A.SEMINAR_TYPE IN(3, 4)
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+        	AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+        	AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSeminarType)">
+        	AND A.SEMINAR_TYPE = #{searchSeminarType}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchDisplayYn)">
+        	AND A.DISPLAY_YN = #{searchDisplayYn}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchEtcOption)">
+        	<choose>
+        		<when test='searchEtcOption == "title"'>
+        			AND A.TITLE LIKE '%'+ #{searchKeywords} + '%'
+        		</when>
+        		<when test='searchEtcOption == "place"'>
+        			<![CDATA[AND A.PLACE LIKE '%'+ #{searchKeywords} + '%']]>
+        		</when>
+        		<when test='searchEtcOption == "teacher"'>
+        			<![CDATA[AND A.TEACHER_NAME LIKE '%'+ #{searchKeywords} + '%']]>
+        		</when>
+        	</choose>
+        </if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" /> 
+    </select>    
+	    
+	<!-- 공모전 정보를 조회한다 -->
+    <select id="getContestInfo" parameterType="map" resultType="umap">
+   	/* seminarMapper.getContestInfo */
+    	SELECT DISTINCT
+    		  A.SEMINAR_SEQ
+    		, CASE A.SEMINAR_TYPE 
+			  	WHEN 3 THEN 'contest'
+			  	WHEN 4 THEN 'competition'
+			  END AS SEMINAR_TYPE
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_AREA_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE)) AS UNIV_AREA_NAME
+			, A.TITLE
+			, A.APPLY_START_DAY
+			, A.APPLY_END_DAY
+			, A.CLASS_DAY
+			, A.CLASS_START_TIME
+			, A.CLASS_END_TIME
+			, A.PLACE
+			, CASE A.EXCHANGE_YN 
+			  	WHEN 'Y' THEN 'exchange'
+			  	WHEN 'N' THEN 'unexchange'
+			  END AS EXCHANGE_YN
+			, CASE 
+				WHEN CONVERT(VARCHAR, GETDATE(), 112) BETWEEN A.APPLY_START_DAY AND A.APPLY_END_DAY THEN '접수중'
+        		WHEN <![CDATA[CONVERT(VARCHAR, GETDATE(), 112) < A.APPLY_START_DAY]]> THEN '대기'
+        		WHEN <![CDATA[CONVERT(VARCHAR, GETDATE(), 112) > A.APPLY_END_DAY]]> THEN '마감'
+			  ELSE ''
+			  END AS SEMINAR_STATUS
+			, CASE A.DISPLAY_YN 
+			  	WHEN 'Y' THEN 'display'
+			  	WHEN 'N' THEN 'none'
+			  END AS DISPLAY_YN
+			, A.THUMBNAIL_FILE_KEY
+			, (SELECT DOWNLOAD_URL FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_URL
+			, (SELECT ORI_FILE_NAME FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_FILE_NAME
+			, (SELECT SAVE_PATH FROM TBL_FILE_INFO WHERE FILE_KEY = A.THUMBNAIL_FILE_KEY) AS THUMBNAIL_PATH
+			, A.CONTENTS
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, A.REG_DT, 120) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, A.MOD_DT, 120) AS MOD_DT
+		FROM
+			  TBL_SEMINAR A LEFT JOIN TBL_FILE_INFO F ON (A.THUMBNAIL_FILE_KEY = F.FILE_KEY)
+		WHERE A.SEMINAR_SEQ = #{seminarSeq}
+    </select>    
+	 
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

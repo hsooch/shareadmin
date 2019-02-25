@@ -1,0 +1,278 @@
+@charset "utf-8";
+/*[S]===============================================
+ * =responsive.less
+ * =message.less
+ * =button.less
+ * =guide.less
+ * =form.less
+ * */
+
+/*[E]===============================================*/
+/*
+ * less variable - this page
+ */
+/*[E]===============================================*/
+
+
+/*
+ * 검색
+ */
+._search {
+  padding-right: 28px;
+  position: relative;
+  height: 30px;
+}
+._search fieldset,
+._search select,
+._search label,
+._search input,
+._search span {
+  float: left;
+}
+._search label,
+._search span {
+  line-height: 28px;
+}
+._search label {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #4285f4;
+}
+._search label,
+._search span,
+._search input[type="text"] {
+  margin-left: 0.5em;
+}
+._search input[type="text"] {
+  padding: 0;
+  text-indent: 0.5em;
+}
+
+/*
+ * 입/출력 레이아웃
+ */
+._view,
+._write {
+  border-top: 1px #333 solid;
+  position: relative;
+}
+._view ._form,
+._write ._form {
+  padding-left: 125px;
+}
+._view ._form ._label,
+._write ._form ._label {
+  width: 110px;
+}
+
+/*
+ * 입력/출력
+ */
+._form {
+  position: relative;
+  border-bottom: 1px #d3d3d3 solid;
+  padding: 10px 0 10px 0;
+  min-height: 28px;
+  height: auto !important;
+  _height: 28px;
+  /*
+	 * ._label 과 ._insert를 상하로 배치
+	 * */
+  /*
+	 * 통계표시
+	 * */
+}
+._form ._label,
+._form ._insert {
+  padding: 2px 0;
+  color: #454545;
+ /* line-height: 28px;*/
+  min-height: 28px;
+  height: auto !important;
+  _height: 28px;
+}
+._form ._label {
+  font-weight: 600;
+  position: absolute;
+  top: 10px;
+  left: 5px;
+  color: #000;
+  font-size: 1.2em;
+  background: url("../../images/common/labelGab.gif") no-repeat right 50%;
+}
+
+._form ._insert {
+  display: block;
+  margin-right: 15px;
+  position: relative;
+}
+
+._form._both {
+  padding-left: 0;
+  display: inline-block;
+}
+
+input[type="checkbox"] {
+  border-radius: 0;
+}
+input[type="checkbox"],
+input[type="radio"] {
+  /*
+	border: 1px @inputBorder solid;
+	background-color: #fff;
+	*/
+}
+input[type="text"],
+input[type="password"],
+input[type="color"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="file"],
+input[type="month"],
+input[type="number"],
+input[type="range"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+input[type="week"],
+textarea {
+  border-width: 1px;
+  border-color: #cccccc;
+  border-style: solid;
+  border-radius: 0;
+  -webkit-appearance: none;
+}
+input[type="text"],
+input[type="password"],
+input[type="color"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="file"],
+input[type="month"],
+input[type="number"],
+input[type="range"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+input[type="week"],
+.selectboxit-container {
+  height: 36px;
+  line-height: 36px;
+}
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="color"]:focus,
+input[type="date"]:focus,
+input[type="datetime"]:focus,
+input[type="datetime-local"]:focus,
+input[type="email"]:focus,
+input[type="file"]:focus,
+input[type="month"]:focus,
+input[type="number"]:focus,
+input[type="range"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="time"]:focus,
+input[type="url"]:focus,
+input[type="week"]:focus,
+.selectboxit-container:focus {
+  border-color: #db0925;
+}
+input[type="text"],
+input[type="password"],
+input[type="color"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="email"],
+input[type="month"],
+input[type="number"],
+input[type="range"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+input[type="week"] {
+  padding: 0;
+}
+input[type="text"]._full,
+input[type="password"]._full,
+input[type="color"]._full,
+input[type="date"]._full,
+input[type="datetime"]._full,
+input[type="datetime-local"]._full,
+input[type="email"]._full,
+input[type="month"]._full,
+input[type="number"]._full,
+input[type="range"]._full,
+input[type="search"]._full,
+input[type="tel"]._full,
+input[type="time"]._full,
+input[type="url"]._full,
+input[type="week"]._full {
+  width: 99.5%;
+}
+select {
+  height: 36px;
+  line-height: 36px;
+  border: 1px #ccc solid;
+}
+textarea {
+  padding: 1%;
+  height: 130px;
+  width: 98%;
+}
+textarea._w80per {
+  width: 80%;
+}
+textarea._h200per {
+  height: 260px;
+}
+textarea._h300per {
+  height: 390px;
+}
+textarea._h400per {
+  height: 520px;
+}
+textarea._editHtml {
+  height: 630px;
+}
+textarea._editCss,
+textarea._editScript {
+  height: 595px;
+}
+/*
+ * selectBox
+ * */
+.selectboxit-container {
+  border: 1px #cccccc solid;
+  border-radius: 0;
+  -webkit-appearance: none;
+}
+/*
+ * placeholder color
+ * */
+::-webkit-input-placeholder {
+  /* WebKit browsers */
+  color: #666;
+}
+:-moz-placeholder {
+  /* Mozilla Firefox 4 to 18 */
+  color: #666;
+  opacity: 1;
+}
+::-moz-placeholder {
+  /* Mozilla Firefox 19+ */
+  color: #666;
+  opacity: 1;
+}
+:-ms-input-placeholder {
+  /* Internet Explorer 10+ */
+  color: #666;
+}

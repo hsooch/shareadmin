@@ -1,0 +1,637 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="subjectMapper">
+	
+	<resultMap id="subjectList" type="uMap">
+		<result property="univCode" column="UNIV_CODE"/>
+		<result property="year" column="YEAR"/>
+		<result property="semesterCode" column="SEMESTER_CODE"/>
+		<result property="subjectNum" column="SUBJECT_NUM"/>
+		<result property="classNum" column="CLASS_NUM"/>
+		<collection property="timeList" column="{semesterCode=SEMESTER_CODE,year=YEAR,univCode=UNIV_CODE,subjectNum=SUBJECT_NUM,classNum=CLASS_NUM}" ofType="uMap" select="getSubjectTimeList"/>
+	</resultMap>
+
+    <select id="getSubjectList" parameterType="map" resultMap="subjectList">
+    	/* subjectMapper.getSubjectList */
+    	<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+    	SELECT 
+			  A.UNIV_CODE
+		 	, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, A.YEAR AS	YEAR
+			, A.SEMESTER_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SEMESTER_CODE) AS SEMESTER_CODE_NAME
+			, A.SUBJECT_NUM
+			, A.CLASS_NUM
+			, A.SUBJECT_GRADE_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SUBJECT_GRADE_CODE) AS SUBJECT_GRADE_CODE_NAME
+			, A.COMPLETE_TYPE
+			, A.SUBJECT_NAME
+			, A.SUBJECT_NAME_EN
+			, A.DEPARTMENT
+			, A.SUBJECT_POINT
+			, A.TEACHER_NAME
+			, A.MAX_STUDENT_CNT
+			, A.MAX_ETC_CNT
+			, ISNULL(A.MAX_CLASS_CNT, 0) AS MAX_CLASS_CNT
+			, A.MEMO
+			, A.CLASS_ACCEPT_TYPE
+			, CASE A.CLASS_ACCEPT_TYPE
+				WHEN 1 THEN '학생'
+				WHEN 2 THEN '학생+청강생'
+				WHEN 3 THEN '청강생'
+				ELSE '학생+청강생' 
+				END AS CLASS_ACCEPTE_TYPE_NAME
+			, A.CURRICULUM_URL
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, A.REG_DT, 102) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, A.MOD_DT, 102) AS MOD_DT
+			, (SELECT MIN(DAY_OF_WEEK) FROM TBL_SUBJECT_TIME
+				WHERE A.SEMESTER_CODE = SEMESTER_CODE
+				AND   A.YEAR = YEAR
+				AND   A.UNIV_CODE = UNIV_CODE
+				AND   A.SUBJECT_NUM = SUBJECT_NUM
+				AND   A.CLASS_NUM = CLASS_NUM
+			) AS TIME_LIST_INDEX
+		<if test='"Y" == useExchangeCnt'>
+			, (SELECT COUNT(0) FROM TBL_APPLY_EXCHANGE TAE
+				WHERE TAE.UNIV_CODE = A.UNIV_CODE AND TAE.YEAR = A.YEAR
+					AND TAE.SEMESTER_CODE = A.SEMESTER_CODE AND TAE.SUBJECT_NUM = A.SUBJECT_NUM
+					AND TAE.CLASS_NUM = A.CLASS_NUM) AS APPLY_CNT
+		</if>
+		FROM TBL_SEMESTER_SUBJECT A
+		WHERE 1=1
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+        	AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+        	AND A.UNIV_CODE = #{searchUniv}
+        </if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchYear)">
+        	AND A.YEAR = #{searchYear}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSemesterCode)">
+        	AND A.SEMESTER_CODE = #{searchSemesterCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSubjectGradeCode)">
+        	AND A.SUBJECT_GRADE_CODE = #{searchSubjectGradeCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchClassAcceptType)">
+        	AND A.CLASS_ACCEPT_TYPE = #{searchClassAcceptType}
+        </if>
+		<choose>
+			<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKey)">
+				<choose>
+					<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchType)">
+						<choose>
+							<when test='searchType == "subjectNum"'>
+								AND A.SUBJECT_NUM LIKE '%' + #{searchKey} + '%'
+							</when>
+							<when test='searchType == "completeType"'>
+								AND A.COMPLETE_TYPE LIKE '%' + #{searchKey} + '%'
+							</when>
+							<when test='searchType == "subjectName"'>
+								AND A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%'
+							</when>
+							<when test='searchType == "department"'>
+								AND A.DEPARTMENT LIKE '%' + #{searchKey} + '%'
+							</when>
+							<when test='searchType == "teacherName"'>
+								AND A.TEACHER_NAME LIKE '%' + #{searchKey} + '%'
+							</when>
+						</choose>
+					</when>
+					<otherwise>
+						AND (
+						A.SUBJECT_NUM LIKE '%' + #{searchKey} + '%' OR
+						A.COMPLETE_TYPE LIKE '%' + #{searchKey} + '%' OR
+						A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%' OR
+						A.DEPARTMENT LIKE '%' + #{searchKey} + '%' OR
+						A.TEACHER_NAME LIKE '%' + #{searchKey} + '%'
+						)
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchCompleteType)">
+					AND A.COMPLETE_TYPE LIKE '%' + #{searchCompleteType} + '%'
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchDepartment)">
+					AND A.DEPARTMENT LIKE '%' + #{searchDepartment} + '%'
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchTeacherName)">
+					AND A.TEACHER_NAME LIKE '%' + #{searchTeacherName} + '%'
+				</if>
+				<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSubjectName)">
+					AND A.SUBJECT_NAME LIKE '%' + #{searchSubjectName} + '%'
+				</if>
+			</otherwise>
+		</choose>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchDayOfWeek)">
+			AND EXISTS(SELECT 1 FROM TBL_SUBJECT_TIME TST
+						WHERE A.UNIV_CODE = TST.UNIV_CODE AND A.YEAR = TST.YEAR
+							AND A.SEMESTER_CODE = TST.SEMESTER_CODE AND A.SUBJECT_NUM = TST.SUBJECT_NUM
+							AND A.CLASS_NUM = TST.CLASS_NUM AND TST.DAY_OF_WEEK = #{searchDayOfWeek})
+		</if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+    
+    <select id="getSubjectTimeList" parameterType="map" resultType="uMap">
+    	/* subjectMapper.getSubjectTimeList */
+    	SELECT 
+    		  A.SUBJECT_TIME_SEQ
+    		, A.SEMESTER_CODE
+    		, A.YEAR
+    		, A.UNIV_CODE
+    		, A.SUBJECT_NUM
+    		, A.CLASS_NUM
+    		, A.DAY_OF_WEEK
+    		, CASE A.DAY_OF_WEEK
+    			WHEN 1 THEN '일'
+    			WHEN 2 THEN '월'
+    			WHEN 3 THEN '화'
+    			WHEN 4 THEN '수'
+    			WHEN 5 THEN '목'
+    			WHEN 6 THEN '금'
+    			WHEN 7 THEN '토'
+    			ELSE ''
+    			END AS DAY_OF_WEEK_NAME
+    		, A.START_TIME
+    		, SUBSTRING(A.START_TIME,1,2) AS START_TIME_HOUR
+    		, SUBSTRING(A.START_TIME,3,2) AS START_TIME_MINUTE
+    		, A.END_TIME
+    		, SUBSTRING(A.END_TIME,1,2) AS END_TIME_HOUR
+    		, SUBSTRING(A.END_TIME,3,2) AS END_TIME_MINUTE
+    		, A.CLASS_ROOM
+    	FROM TBL_SUBJECT_TIME A
+    	WHERE A.SEMESTER_CODE = #{semesterCode}
+    	AND   A.YEAR = #{year}
+    	AND   A.UNIV_CODE = #{univCode}
+    	AND   A.SUBJECT_NUM = #{subjectNum}
+    	AND   A.CLASS_NUM = #{classNum}
+    </select>
+    
+    <update id="upsertSubjectInfo" parameterType="map">
+    	/* subjectMapper.upsertSubjectInfo */
+    	DECLARE @SEMESTER_CODE VARCHAR(11),
+    			@YEAR VARCHAR(4),
+    			@UNIV_CODE VARCHAR(11),
+    			@SUBJECT_NUM VARCHAR(50),
+    			@CLASS_NUM VARCHAR(50) 
+		SET @SEMESTER_CODE = #{semesterCode}
+		SET @YEAR = #{year}
+		SET @UNIV_CODE = #{univCode}
+		<choose>
+    		<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subjectNum)">
+    			SET @SUBJECT_NUM = #{subjectNum}
+				SET @CLASS_NUM = #{classNum}
+    		</when>
+    		<otherwise>
+    			SET @SUBJECT_NUM = #{newSubjectNum}
+				SET @CLASS_NUM = #{newClassNum}
+   			</otherwise>
+    	</choose>
+		
+
+    	IF NOT EXISTS (	SELECT 1 FROM TBL_SEMESTER_SUBJECT
+    					WHERE SEMESTER_CODE = @SEMESTER_CODE
+    					AND   YEAR = @YEAR
+    					AND   UNIV_CODE = @UNIV_CODE
+    					AND   SUBJECT_NUM = @SUBJECT_NUM
+    					AND   CLASS_NUM = @CLASS_NUM
+    	)
+    		INSERT INTO TBL_SEMESTER_SUBJECT(
+    			  UNIV_CODE
+    			, YEAR
+    			, SEMESTER_CODE
+    			, SUBJECT_NUM
+    			, CLASS_NUM
+    			, SUBJECT_GRADE_CODE
+    			, COMPLETE_TYPE
+    			, SUBJECT_NAME
+    			, SUBJECT_NAME_EN
+    			, DEPARTMENT
+    			, SUBJECT_POINT
+    			, TEACHER_NAME
+    			, MAX_STUDENT_CNT
+    			, MAX_ETC_CNT
+    			, MEMO
+    			, CLASS_ACCEPT_TYPE
+    			, CURRICULUM_URL
+    			, REG_USER_SEQ
+    			, REG_DT
+    		)
+    		VALUES(
+    			  @UNIV_CODE
+    			, @YEAR
+    			, @SEMESTER_CODE
+    			, @SUBJECT_NUM
+    			, @CLASS_NUM
+    			, #{subjectGradeCode}
+    			, #{completeType}
+    			, #{subjectName}
+    			, #{subjectNameEn}
+    			, #{department}
+    			, #{subjectPoint}
+    			, #{teacherName}
+    			, ISNULL(#{maxStudentCnt},0)
+    			, ISNULL(#{maxEtcCnt},0)
+    			, #{memo}
+    			<choose>
+    				<when test="maxStudentCnt > 0 and maxEtcCnt == 0">
+    				, 1
+    				</when>
+	    			<when test="maxStudentCnt == 0 and maxEtcCnt > 0">
+	    			, 3
+	    			</when>
+	    			<otherwise>
+	    			, 2
+	    			</otherwise>
+    			</choose>
+    			, #{curriculumUrl}
+    			, #{modUserSeq}
+    			, GETDATE()
+    		)
+    	ELSE
+    	UPDATE TBL_SEMESTER_SUBJECT
+    	SET
+    		  MOD_USER_SEQ = #{modUserSeq}
+   			, MOD_DT = GETDATE()
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subjectGradeCode)">
+    			, SUBJECT_GRADE_CODE = #{subjectGradeCode}
+   			</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(completeType)">
+    			, COMPLETE_TYPE = #{completeType}
+   			</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subjectName)">
+    			, SUBJECT_NAME = #{subjectName}
+    		</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subjectNameEn)">
+    			, SUBJECT_NAME_EN = #{subjectNameEn}
+    		</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(department)">
+    			, DEPARTMENT = #{department}
+    		</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subjectPoint)">
+    			, SUBJECT_POINT = #{subjectPoint}
+    		</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(teacherName)">
+    			, TEACHER_NAME = #{teacherName}
+    		</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(maxStudentCnt)">
+    			, MAX_STUDENT_CNT = #{maxStudentCnt}
+    		</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(maxEtcCnt)">
+    			, MAX_ETC_CNT = #{maxEtcCnt}
+    		</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(memo)">
+    			, MEMO = #{memo}
+    		</if>
+    		<choose>
+   				<when test="maxStudentCnt > 0 and maxEtcCnt == 0">
+   				, CLASS_ACCEPT_TYPE = 1
+   				</when>
+    			<when test="maxStudentCnt == 0 and maxEtcCnt > 0">
+    			, CLASS_ACCEPT_TYPE = 3
+    			</when>
+    			<otherwise>
+    			, CLASS_ACCEPT_TYPE = 2
+    			</otherwise>
+   			</choose>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(curriculumUrl)">
+    			, CURRICULUM_URL = #{curriculumUrl}
+   			</if>
+		WHERE
+			SEMESTER_CODE = @SEMESTER_CODE
+		AND YEAR = @YEAR
+		AND UNIV_CODE = @UNIV_CODE
+		AND SUBJECT_NUM = @SUBJECT_NUM
+		AND CLASS_NUM = @CLASS_NUM
+    </update>
+    
+    <update id="upsertSubjectTimeInfo" parameterType="map">
+    	/* subjectMapper.upsertSubjectTimeInfo */
+    	DECLARE @SEQ INT,
+    			@SEMESTER_CODE VARCHAR(11),
+    			@YEAR VARCHAR(4),
+    			@UNIV_CODE VARCHAR(11),
+    			@SUBJECT_NUM VARCHAR(50),
+    			@CLASS_NUM VARCHAR(50)
+    	SET @SEQ = #{subjectTimeSeq} 
+		SET @SEMESTER_CODE = #{semesterCode}
+		SET @YEAR = #{year}
+		SET @UNIV_CODE = #{univCode}
+ 		<choose>
+    		<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subjectNum)">
+    			SET @SUBJECT_NUM = #{subjectNum}
+				SET @CLASS_NUM = #{classNum}
+    		</when>
+    		<otherwise>
+    			SET @SUBJECT_NUM = #{newSubjectNum}
+				SET @CLASS_NUM = #{newClassNum}
+   			</otherwise>
+    	</choose>
+		
+
+    	IF NOT EXISTS (	SELECT 1 FROM TBL_SUBJECT_TIME
+    					WHERE SEMESTER_CODE = @SEMESTER_CODE
+    					AND   YEAR = @YEAR
+    					AND   UNIV_CODE = @UNIV_CODE
+    					AND   SUBJECT_NUM = @SUBJECT_NUM
+    					AND   CLASS_NUM = @CLASS_NUM
+    					AND   SUBJECT_TIME_SEQ = @SEQ
+    	)
+    		INSERT INTO TBL_SUBJECT_TIME(
+    			  UNIV_CODE
+    			, YEAR
+    			, SEMESTER_CODE
+    			, SUBJECT_NUM
+    			, CLASS_NUM
+    			, DAY_OF_WEEK
+    			, START_TIME
+    			, END_TIME
+    			, CLASS_ROOM
+    		)
+    		VALUES(
+    			  @UNIV_CODE
+    			, @YEAR
+    			, @SEMESTER_CODE
+    			, @SUBJECT_NUM
+    			, @CLASS_NUM
+    			, #{dayOfWeek}
+    			, #{startTime}
+    			, #{endTime}
+    			, #{classRoom}
+    		)
+    	ELSE
+    	UPDATE TBL_SUBJECT_TIME
+    	SET
+ 			  SUBJECT_NUM = #{newSubjectNum}
+    		, CLASS_NUM = #{newClassNum}
+    		, DAY_OF_WEEK = #{dayOfWeek}
+   			, START_TIME = #{startTime}
+   			, END_TIME = #{endTime}
+   			, CLASS_ROOM = #{classRoom}
+		WHERE
+			SEMESTER_CODE = @SEMESTER_CODE
+		AND YEAR = @YEAR
+		AND UNIV_CODE = @UNIV_CODE
+		AND SUBJECT_NUM = @SUBJECT_NUM
+		AND CLASS_NUM = @CLASS_NUM
+		AND SUBJECT_TIME_SEQ = @SEQ
+    </update>
+    
+    <select id="getSubjectInfo" parameterType="map"  resultMap="subjectList">
+    	/* subjectMapper.getSubjectInfo */
+    	SELECT
+ 			(SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_AREA_CODE
+			, A.UNIV_CODE
+ 			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, A.YEAR AS	YEAR
+			, A.SEMESTER_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SEMESTER_CODE) AS SEMESTER_CODE_NAME
+			, A.SUBJECT_NUM
+			, A.CLASS_NUM
+			, A.SUBJECT_GRADE_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SUBJECT_GRADE_CODE) AS SUBJECT_GRADE_CODE_NAME
+			, A.COMPLETE_TYPE
+			, A.SUBJECT_NAME
+			, A.SUBJECT_NAME_EN
+			, A.DEPARTMENT
+			, A.SUBJECT_POINT
+			, A.TEACHER_NAME
+			, A.MAX_STUDENT_CNT
+			, A.MAX_ETC_CNT
+			, A.MEMO
+			, A.CLASS_ACCEPT_TYPE
+			, CASE A.CLASS_ACCEPT_TYPE
+				WHEN 1 THEN '학생'
+				WHEN 2 THEN '학생+청강생'
+				WHEN 3 THEN '청강생'
+				ELSE '학생+청강생' 
+				END AS CLASS_ACCEPTE_TYPE_NAME
+			, A.CURRICULUM_URL
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, A.REG_DT, 102) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, A.MOD_DT, 102) AS MOD_DT
+		FROM TBL_SEMESTER_SUBJECT A
+		WHERE A.UNIV_CODE = #{univCode} AND A.YEAR = #{year} AND A.SEMESTER_CODE = #{semesterCode}
+			  AND A.SUBJECT_NUM = #{subjectNum} AND A.CLASS_NUM = #{classNum}
+    </select>
+    
+    <delete id="deleteSubjectInfo" parameterType="map">
+    	/* subjectMapper.deleteSubjectInfo */
+    	DELETE	FROM TBL_SEMESTER_SUBJECT
+    	WHERE	SEMESTER_CODE = #{semesterCode}
+		AND		YEAR = #{year}
+		AND		UNIV_CODE = #{univCode}
+		AND		SUBJECT_NUM = #{subjectNum}
+		AND		CLASS_NUM = #{classNum}
+    </delete>
+    
+    <delete id="deleteSubjectTimeInfo" parameterType="map">
+    	/* subjectMapper.deleteSubjectTimeInfo */
+    	DELETE	FROM TBL_SUBJECT_TIME
+    	WHERE	SEMESTER_CODE = #{semesterCode}
+		AND		YEAR = #{year}
+		AND		UNIV_CODE = #{univCode}
+		AND		SUBJECT_NUM = #{subjectNum}
+		AND		CLASS_NUM = #{classNum}
+		<if test="removeSubjectTimeSeqArr != null">
+			<foreach item="subjectTimeSeq" collection="removeSubjectTimeSeqArr" open="AND SUBJECT_TIME_SEQ IN (" close=")" separator=",">
+	    		#{subjectTimeSeq}
+	    	</foreach>
+		</if>
+    </delete>
+    
+    <select id="getSubjectListForExcel" parameterType="map" resultType="uMap">
+		/* subjectMapper.getSubjectListForExcel */
+		<include refid="subjectMapper.getSubjectTimeConcatList" />
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+    	SELECT 
+			  A.UNIV_CODE
+		 	, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, A.YEAR AS	YEAR
+			, A.SEMESTER_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SEMESTER_CODE) AS SEMESTER_CODE_NAME
+			, A.SUBJECT_NUM
+			, A.CLASS_NUM
+			, A.SUBJECT_GRADE_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SUBJECT_GRADE_CODE) AS SUBJECT_GRADE_CODE_NAME
+			, A.COMPLETE_TYPE
+			, A.SUBJECT_NAME
+			, A.SUBJECT_NAME_EN
+			, A.DEPARTMENT
+			, A.SUBJECT_POINT
+			, A.TEACHER_NAME
+			, A.MAX_STUDENT_CNT
+			, A.MAX_ETC_CNT
+			, A.MEMO
+			, A.CLASS_ACCEPT_TYPE
+			, CASE A.CLASS_ACCEPT_TYPE
+				WHEN 1 THEN '학생'
+				WHEN 2 THEN '학생+청강생'
+				WHEN 3 THEN '청강생'
+				ELSE '학생+청강생' 
+				END AS CLASS_ACCEPTE_TYPE_NAME
+			, A.CURRICULUM_URL
+			, A.REG_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.REG_USER_SEQ) AS REG_USER_NAME
+			, CONVERT(VARCHAR, A.REG_DT, 102) AS REG_DT
+			, A.MOD_USER_SEQ
+			, (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.MOD_USER_SEQ) AS MOD_USER_NAME
+			, CONVERT(VARCHAR, A.MOD_DT, 102) AS MOD_DT
+			, STUFF(
+				(	
+					SELECT 
+						', ' + VIEW_B.DAY_OF_WEEK_CONCAT +
+						' (' + SUBSTRING(VIEW_A.START_TIME,1,2) + ':' + SUBSTRING(VIEW_A.START_TIME,3,2) +
+						'~' + SUBSTRING(VIEW_A.END_TIME,1,2) + ':' + SUBSTRING(VIEW_A.END_TIME,3,2) +
+						')'
+					FROM SUBJECT_START_END_TIME VIEW_A
+					JOIN SUBJECT_DAY_OF_WEEK VIEW_B ON VIEW_A.UNIV_CODE = VIEW_B.UNIV_CODE AND VIEW_A.YEAR = VIEW_B.YEAR AND VIEW_A.SEMESTER_CODE = VIEW_B.SEMESTER_CODE AND VIEW_A.SUBJECT_NUM = VIEW_B.SUBJECT_NUM AND VIEW_A.CLASS_NUM = VIEW_B.CLASS_NUM AND VIEW_A.ORDER_NUM = VIEW_B.ORDER_NUM
+					WHERE VIEW_A.UNIV_CODE = A.UNIV_CODE
+					AND VIEW_A.YEAR = A.YEAR
+					AND VIEW_A.SEMESTER_CODE = A.SEMESTER_CODE
+					AND VIEW_A.SUBJECT_NUM = A.SUBJECT_NUM
+					AND VIEW_A.CLASS_NUM = A.CLASS_NUM
+					FOR XML PATH('')
+				)
+				,1,2,'') AS SUBJECT_TIME_INFO
+		FROM TBL_SEMESTER_SUBJECT A
+		WHERE 1=1
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+        	AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+        	AND A.UNIV_CODE = #{searchUniv}
+        </if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchYear)">
+        	AND A.YEAR = #{searchYear}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSemesterCode)">
+        	AND A.SEMESTER_CODE = #{searchSemesterCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSubjectGradeCode)">
+        	AND A.SUBJECT_GRADE_CODE = #{searchSubjectGradeCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchClassAcceptType)">
+        	AND A.CLASS_ACCEPT_TYPE = #{searchClassAcceptType}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKey)"> 
+	        <choose>
+	        	<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchType)">
+	        		<choose>
+	        			<when test='searchType == "subjectNum"'>
+	        				AND A.SUBJECT_NUM LIKE '%' + #{searchKey} + '%'
+	        			</when>
+	        			<when test='searchType == "completeType"'>
+	        				AND A.COMPLETE_TYPE LIKE '%' + #{searchKey} + '%'
+	        			</when>
+	        			<when test='searchType == "subjectName"'>
+	        				AND A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%'
+	        			</when>
+	        			<when test='searchType == "department"'>
+	        				AND A.DEPARTMENT LIKE '%' + #{searchKey} + '%'
+	        			</when>
+	        			<when test='searchType == "teacherName"'>
+	        				AND A.TEACHER_NAME LIKE '%' + #{searchKey} + '%'
+	        			</when>
+	        		</choose>
+	        	</when>
+	        	<otherwise>
+	        		AND (
+	        			A.SUBJECT_NUM LIKE '%' + #{searchKey} + '%' OR
+	        			A.COMPLETE_TYPE LIKE '%' + #{searchKey} + '%' OR
+	        			A.SUBJECT_NAME LIKE '%' + #{searchKey} + '%' OR
+	        			A.DEPARTMENT LIKE '%' + #{searchKey} + '%' OR
+	        			A.TEACHER_NAME LIKE '%' + #{searchKey} + '%'
+	        		)
+	        	</otherwise>
+	        </choose>
+        </if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />    	
+    </select>
+    
+    <sql id="getSubjectTimeConcatList">
+    	WITH SUBJECT_START_END_TIME AS (
+	    	SELECT AA.UNIV_CODE, AA.YEAR, AA.SEMESTER_CODE, AA.SUBJECT_NUM, AA.CLASS_NUM, AA.START_TIME, AA.END_TIME,
+				ROW_NUMBER() OVER(PARTITION BY UNIV_CODE, YEAR, SEMESTER_CODE, SUBJECT_NUM, CLASS_NUM ORDER BY (
+					SELECT TOP 1 DAY_OF_WEEK
+					FROM TBL_SUBJECT_TIME
+					WHERE UNIV_CODE = AA.UNIV_CODE
+					AND YEAR = AA.YEAR
+					AND SEMESTER_CODE =  AA.SEMESTER_CODE
+					AND SUBJECT_NUM = AA.SUBJECT_NUM
+					AND CLASS_NUM = AA.CLASS_NUM
+					AND START_TIME = AA.START_TIME
+					AND END_TIME = AA.END_TIME
+					ORDER BY DAY_OF_WEEK ASC
+				) ASC) AS ORDER_NUM
+			FROM (
+				SELECT DISTINCT UNIV_CODE, YEAR, SEMESTER_CODE, SUBJECT_NUM, CLASS_NUM, START_TIME, END_TIME
+				FROM TBL_SUBJECT_TIME
+				GROUP BY UNIV_CODE, YEAR, SEMESTER_CODE, SUBJECT_NUM, CLASS_NUM, START_TIME, END_TIME, DAY_OF_WEEK
+			) AA
+		),
+		SUBJECT_DAY_OF_WEEK AS (
+			SELECT AA.UNIV_CODE, AA.YEAR, AA.SEMESTER_CODE, AA.SUBJECT_NUM, AA.CLASS_NUM, AA.DAY_OF_WEEK_CONCAT
+			,
+				ROW_NUMBER() OVER(PARTITION BY UNIV_CODE, YEAR, SEMESTER_CODE, SUBJECT_NUM, CLASS_NUM ORDER BY (
+					SELECT TOP 1 DAY_OF_WEEK
+					FROM TBL_SUBJECT_TIME
+					WHERE UNIV_CODE = AA.UNIV_CODE
+					AND YEAR = AA.YEAR
+					AND SEMESTER_CODE =  AA.SEMESTER_CODE
+					AND SUBJECT_NUM = AA.SUBJECT_NUM
+					AND CLASS_NUM = AA.CLASS_NUM
+					AND (CASE DAY_OF_WEEK
+			    				WHEN 1 THEN '일'
+			    				WHEN 2 THEN '월'
+			    				WHEN 3 THEN '화'
+			    				WHEN 4 THEN '수'
+			    				WHEN 5 THEN '목'
+			    				WHEN 6 THEN '금'
+			    				WHEN 7 THEN '토'
+			    				ELSE ''
+			    				END)  = SUBSTRING(AA.DAY_OF_WEEK_CONCAT,1,1)
+					ORDER BY DAY_OF_WEEK ASC
+				) ASC) AS ORDER_NUM
+			FROM (
+				SELECT DISTINCT
+					UNIV_CODE, YEAR, SEMESTER_CODE, SUBJECT_NUM, CLASS_NUM,
+					STUFF((
+						SELECT ', '+
+							(CASE B.DAY_OF_WEEK
+			    				WHEN 1 THEN '일'
+			    				WHEN 2 THEN '월'
+			    				WHEN 3 THEN '화'
+			    				WHEN 4 THEN '수'
+			    				WHEN 5 THEN '목'
+			    				WHEN 6 THEN '금'
+			    				WHEN 7 THEN '토'
+			    				ELSE ''
+			    				END)
+						FROM TBL_SUBJECT_TIME B
+						WHERE B.UNIV_CODE = A.UNIV_CODE
+						AND B.YEAR = A.YEAR
+						AND B.SEMESTER_CODE =  A.SEMESTER_CODE
+						AND B.SUBJECT_NUM = A.SUBJECT_NUM
+						AND B.CLASS_NUM = A.CLASS_NUM
+						AND B.START_TIME = A.START_TIME
+						AND B.END_TIME = B.END_TIME
+						GROUP BY B.DAY_OF_WEEK, B.START_TIME, B.END_TIME
+						ORDER BY DAY_OF_WEEK ASC
+						FOR XML PATH('')
+					),1,2,'') AS DAY_OF_WEEK_CONCAT
+				FROM TBL_SUBJECT_TIME A
+			) AA
+    	)
+    </sql>
+</mapper>

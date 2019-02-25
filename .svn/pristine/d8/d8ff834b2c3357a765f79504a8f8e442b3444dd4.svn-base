@@ -1,0 +1,5 @@
+<div style="width: 356px;">
+    <h3>오류 발생!!!</h3>
+    <h3>콘솔 로그를 확인해 주시오!!</h3>
+    <h2 style="cursor: pointer;" ng-click="closeThisDialog();">닫기</h2>
+</div>

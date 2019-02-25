@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mailAuthMapper">
+
+
+    <select id="selectMailAuthInfo" parameterType="map" resultType="mailAuthVO">
+        /* mailAuthMapper.selectMailAuthInfo */
+        SELECT 
+       		  UUID
+        	, EMAIL
+        	, CONFM_YN
+        	, REPLACE(CONVERT(VARCHAR,EXPIRE_DATE, 120), '-', '.') AS MOD_DT
+        FROM TBL_EMAIL_AUTH
+        WHERE UUID = #{uuid}
+        AND EMAIL = #{email}
+    </select>
+    
+    <insert id="insertMailAuth" parameterType="map">
+    	/* mailAuthMapper.insertMailAuth */
+    	INSERT INTO TBL_EMAIL_AUTH(
+    		  UUID
+    		, EMAIL
+    		, CONFM_YN
+    		, EXPIRE_DATE
+    	)
+    	VALUES(
+    		  #{uuid}
+    		, #{email}
+    		, 'N'
+    		, CONVERT (DATETIME, #{toDt})
+    	)
+    </insert>
+    
+    <update id="updateMailAuth" parameterType="map">
+    	/* mailAuthMapper.updateMailAuth */
+    	<![CDATA[
+    	UPDATE TBL_EMAIL_AUTH
+    	SET 
+    		CONFM_YN = #{confmYn}
+    	WHERE UUID = #{uuid}
+    	AND EMAIL = #{email}
+    	AND EXPIRE_DATE >= GETDATE()
+    	]]>
+    </update>
+    
+    <select id="checkMailAuth" parameterType="map" resultType="java.lang.String">
+    	/* mailAuthMapper.checkMailAuth */
+    	<![CDATA[
+    	SELECT
+    		CASE 
+				WHEN CONFM_YN = 'Y' THEN '01'
+    			WHEN CONFM_YN = 'N' AND EXPIRE_DATE > CONVERT (DATETIME, GETDATE()) THEN '02'
+    			WHEN CONFM_YN = 'N' AND EXPIRE_DATE < CONVERT (DATETIME, GETDATE()) THEN '03'
+    			ELSE '00'
+    		END AS CHECK_RESULT_CODE
+    	FROM TBL_EMAIL_AUTH
+    	WHERE UUID = #{uuid}
+    	AND EMAIL = #{email}
+    	]]>
+    	<if test="confmYn != null and confmYn !=''">
+    		AND CONFM_YN = #{confmYn}
+    	</if>
+    </select>
+    
+</mapper>

@@ -1,0 +1,107 @@
+<div class="_popup _langko">
+    <div id="_wrap">
+        <div class="_popupInner">
+            <div class="_popHeader" ng-show="$root.exchange.scorePageType == 'in'">
+                <span class="pop_Title"> 성적등록 상세보기</span>
+                <a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+            </div>
+            <div class="_popHeader" ng-show="$root.exchange.scorePageType == 'out'">
+                <span class="pop_Title"> 성적조회 상세보기</span>
+                <a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+            </div>
+            <div class="_popContent">
+                <div class="popconBox">
+			        <div id="_articleContent" class="_articleContent" style="padding-top:0px;">
+			            <div class="_insert">
+			                <div class="_table">
+			                    <h2 class="cont_Title">기본정보</h2>
+			                    <table class="_table _view w100">
+			                        <caption>기본정보 표</caption>
+			                        <colgroup>
+			                            <col style="width:150px;">
+			                            <col>
+			                            <col style="width:150px;">
+			                            <col>
+			                        </colgroup>
+			                        <tbody>
+			                            <tr>
+                                            <th>결과 등록일<span class="mark"></span></th>
+                                            <td>{{$root.exchange.registScoreInfo.scoreRegDt}}</td>
+			                                <th>소속대학<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.userUnivCodeName}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>학과<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.userDepartment}}</td>
+			                                <th>학년<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.studentGradeCode}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>성명<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.userName}}</td>
+			                                <th>소속대학 학번<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.studentNumber}}</td>
+			                            </tr>
+			                        </tbody>
+			                    </table>
+			                    <h2 class="cont_Title">성적정보</h2>
+			                    <table class="_table _view w100">
+			                        <caption>성적정보 표</caption>
+			                        <colgroup>
+			                            <col style="width:150px;">
+			                            <col>
+			                            <col style="width:150px;">
+			                            <col>
+			                        </colgroup>
+			                        <tbody>
+			                           <tr>
+			                                <th>교류대학<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.univCodeName}}</td>
+			                                <th>교과번호<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.subjectNum}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>이수구분<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.completeType}}</td>
+			                                <th>과목명<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.subjectName}}</td>
+			                            </tr>
+                                        <tr>
+                                            <th>과목명 영문<span class="mark"></span></th>
+                                            <td>{{$root.exchange.registScoreInfo.subjectNameEn}}</td>
+                                            <th>학점<span class="mark"></span></th>
+                                            <td>{{$root.exchange.registScoreInfo.subjectPoint}}</td>
+                                        </tr>
+			                            <tr>
+			                                <th>분반<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.classNum}}</td>
+                                            <th>학과<span class="mark"></span></th>
+                                            <td>{{$root.exchange.registScoreInfo.subjectDepartment}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>담당교수<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.teacherName}}</td>
+                                            <th>교류대학 학번<span class="mark"></span></th>
+                                            <td>{{$root.exchange.registScoreInfo.mInStNum}}</td>
+			                            </tr>
+			                            <tr>
+			                                <th>백분위 점수<span class="mark"></span></th>
+			                                <td>{{$root.exchange.registScoreInfo.score}}</td>
+                                            <th>등급<span class="mark"></span></th>
+                                            <td>{{$root.exchange.registScoreInfo.gradeName}}</td>
+			                            </tr>
+			                        </tbody>
+			                    </table>
+			                </div>
+			            </div>
+			            <div class="_areaButton">
+			                <div class="_center">
+			                    <span class="_button _large blackBtn"><a ng-click="closeThisDialog();">닫기</a></span>
+			                </div>
+			            </div>
+			        </div><!-- #_articleContent" -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

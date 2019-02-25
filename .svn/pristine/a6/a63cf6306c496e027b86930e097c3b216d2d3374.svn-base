@@ -1,0 +1,16 @@
+<!-- layer popup -->
+<div class="modal fade" style="display:block;" tabindex="-10" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+    		<button type="button" class="close" data-dismiss="modal" aria-label="Close" ng-click="submitClick();"><span aria-hidden="true">×</span></button>
+	   		<i class="icon-notice"><img ng-src="{{$root.Const.contextPath + 'images/icon_notice.jpg'}}" alt=""></i>
+   			<!-- 메시지입력 -->
+   			<p class="modal-message" style="white-space: pre-line; word-break: break-word;">{{message}}</p>
+			<!-- //메시지입력 -->
+			<div class="btn-area">
+				<a href="javascript:void(0);" class="btn btn-blue btn-sm" ng-click="submitClick();"><span>확인</span></a>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- //layer popup -->

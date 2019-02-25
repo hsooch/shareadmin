@@ -1,0 +1,12 @@
+@charset "utf-8";
+
+html,body{width:100%;height:100%;margin:0;padding:0;line-height:normal}
+*{margin:0;padding:0}
+a{text-decoration:none}
+a:link,a:active,a:visited{color:#666}
+a:hover{color:#b40c0c}
+ul,li{list-style:none}
+img,fieldset,iframe{border:0 none}
+form legend,fieldset legend{display:none}
+hr{border-width:1px 0 0;border-style:solid;border-color:#ccc;margin:1em 0}
+em,address{font-style:normal}input{vertical-align:middle}

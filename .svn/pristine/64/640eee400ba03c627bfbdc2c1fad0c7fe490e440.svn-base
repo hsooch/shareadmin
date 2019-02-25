@@ -1,0 +1,33 @@
+<div class="_popup _langko">
+	<div id="_wrap">
+		<div class="_popupInner">
+			<div class="_popHeader">
+				<span class="pop_Title"> 반려 사유</span>
+				<a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+			</div>
+			<div class="_popContent">
+				<div class="popconBox">
+					<header id="_popupHeader">
+						<h1>반려 사유</h1>
+					</header>
+					<div id="_articleContent">
+						<div class="_insert">
+							<textarea id="rejectReason" ng-model="rejectReason" placeholder="반려 사유를 입력하세요 (200자 제한)" ng-readonly="popupViewType == 'info'"></textarea>
+						</div>
+						<div class="_areaButton border1px">
+							<div class="_center">
+								<span ng-if="userListIdx == null" class="_button _large blackBtn tabInnBtn"><a href="javascript:void(0);" class="wx88" ng-click="updateReject($root.userManagement.pageType)">확인</a></span>
+								<span ng-if="userListIdx == null" class="_button _large borderBtn tabInnBtn"><a href="javascript:void(0);" class="wx88" ng-click="closeThisDialog()">취소</a></span>
+								<span ng-if="userListIdx != null" class="_button _large blackBtn tabInnBtn"><a href="javascript:void(0);" class="wx88" ng-click="closeThisDialog()">닫기</a></span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+

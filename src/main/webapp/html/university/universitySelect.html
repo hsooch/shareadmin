@@ -1,0 +1,34 @@
+<div class="_popup _langko">
+    <div id="_wrap">
+        <header id="_popupHeader">
+            <h1>개별 협약대학</h1>
+        </header>
+        <div id="_articleContent" class="_articleContent">
+            <div class="_insert">
+                <select name="area_kind" id="area_kind" class="_selectBox _fL w100 mt10" ng-model="areaCode">
+                    <option ng-repeat="area in areaCodeList | orderBy:'codeName'" value="{{area.code}}"
+                            ng-init="$first && initAreaCode(area)">
+                        {{area.codeName}}
+                    </option>
+                </select>
+                <div class="sch_code">
+                    <ul>
+                        <!-- 협약 대학이 있을 경우  style="display:none"  -->
+                        <li ng-show="univList.length === 0">선택할 수 있는 개별 협약대학이 없습니다.</li>
+                        <!-- //협약 대학이 있을 경우 -->
+                        <li ng-repeat="univ in univList">
+                            <input type="checkbox" id="chk_{{univ.code}}" ng-model="univ.checked">
+                            <label for="chk_{{univ.code}}"><span></span></label>{{univ.codeName}}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="_areaButton">
+                <div class="_center">
+                    <span class="_button _large blackBtn"><a ng-click="saveIndividualMou();" style="cursor: pointer">저장</a></span>
+                    <span class="_button _large borderBtn"><a ng-click="closeThisDialog();" style="cursor: pointer;">취소</a></span>
+                </div>
+            </div>
+        </div><!-- #_articleContent" -->
+    </div>
+</div>

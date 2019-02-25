@@ -1,0 +1,15 @@
+<!-- layer popup -->
+<div id="popup_stocked" class="pop_alert" title="얼럿 제목">
+	<!--  popup content Start  -->
+	<div class="popup_content">
+		<div class="alert_txt">
+			{{message}}
+		</div>
+		<div class="_areaButton alertBtn">
+			<div class="_center">
+				<span class="_button _large blackBtn"><a ng-click="submitClick();" class="btn_confirm">확인</a></span>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- //layer popup -->

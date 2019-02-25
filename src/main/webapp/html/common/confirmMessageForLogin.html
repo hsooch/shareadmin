@@ -1,0 +1,17 @@
+<!-- layer popup -->
+<div class="modal fade in" style="display: block; padding-right: 17px;">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+			<button type="button" class="close" ng-click="closeThisDialog();"><span>×</span></button>
+			<i class="icon-notice"><img src="../../images/icon_notice.jpg" alt=""></i>
+			<!-- 메시지입력 -->
+			<p class="modal-message" style="white-spce: pre-line;">{{message}}</p>
+			<!-- //메시지입력 -->
+			<div class="btn-area">
+				<a href="javascript:void(0);" class="btn btn-blue btn-sm" ng-click="submitClick();"><span>확인</span></a>
+				<a href="javascript:void(0);" class="btn btn-gray btn-sm" ng-click="closeThisDialog();"><span>닫기</span></a>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- //layer popup -->

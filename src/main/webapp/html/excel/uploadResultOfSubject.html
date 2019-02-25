@@ -1,0 +1,61 @@
+<div class="_popup _langko">
+	<div id="_wrap">
+		<div class="_popupInner">
+			<div class="_popHeader">
+				<span class="pop_Title"> 등록 실패 사유</span>
+				<a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+			</div>
+			<div class="_popContent">
+				<div class="popconBox">
+					<div id="_articleContent" class="_articleContent">
+						<div class="_insert">
+		                    <div class="_table">
+		                        <h2 class="cont_Title">등록 실패 사유</h2>
+		                        <div style="max-height: 350px;overflow-y: auto;">
+			                        <table class="_table _view w100">
+			                            <caption>항목별 등록 안내 표</caption>
+			                            <colgroup>
+			                                <col style="width:140px;">
+			                                <col style="width:90px;">
+			                                <col style="width:140px;">
+			                                <col style="width:70px;">
+			                                <col>
+			                            </colgroup>
+			                            <thead>
+			                                <tr>
+			                                    <th>교과번호</th>
+			                                    <th>분반</th>
+			                                    <th>과목명</th>
+			                                    <th>결과</th>
+			                                    <th>사유</th>
+			                                </tr>
+			                            </thead>
+			                            <tbody ng-repeat="resultInfo in checkResultList | orderBy:descRn:false">
+			                            	<tr>
+			                            		<td>{{resultInfo.failMap.subjectNum}}</td>
+			                            		<td>{{resultInfo.failMap.classNum}}</td>
+			                            		<td>{{resultInfo.failMap.subjectName}}</td>
+			                            		<td><span class="mark">실패</span></td>
+			                            		<td>
+			                            			<span class="mark" ng-repeat="failCell in resultInfo.failCellList | orderBy:descRn:false">
+			                            				[{{getFieldNames(failCell)}}]
+			                            			</span>
+			                            			이 잘못됐습니다.
+		                            			</td>
+			                            	</tr>
+			                            </tbody>
+			                        </table>
+		                        </div>
+		                    </div>
+						</div>
+						<div class="_areaButton">
+							<div class="_center">
+								<span class="_button _large blackBtn"><a href="javascript:void(0);" ng-click="closeThisDialog();" >닫기</a></span>
+							</div>
+						</div>
+					</div><!-- #_articleContent" -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

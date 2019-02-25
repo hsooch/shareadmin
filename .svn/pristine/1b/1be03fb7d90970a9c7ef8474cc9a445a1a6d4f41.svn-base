@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="statisticsEdxMapper">
+	<!-- 기관 목록 조회 쿼리문. -->
+	<select id="selectOrgNameList" resultType="map">
+	SELECT DISTINCT org
+	FROM course_overviews_courseoverview
+	ORDER BY org
+	</select>
+	
+	<!-- 기관별 통계 조회 쿼리문. org : 기관, A : 수강생, B : 수강중인 수강생, C : 등록 강좌 수, D : 예정 
+		강좌 수, E : 개강 강좌 수, F : 종강 강좌 수, G : 수료자 수 -->
+	<select id="selectOrgCaseStatList" parameterType="map" resultType="map">
+	<![CDATA[
+	SELECT
+		ifnull(temp.org, 'total') as org, ifnull(SUM(a), 0) as a_cnt
+		, ifnull(SUM(g), 0) as g_cnt
+		, ifnull(SUM(a), 0) - ifnull(SUM(g), 0) as ag_minus_cnt
+		, ifnull(SUM(b), 0) as b_cnt
+		, ifnull(SUM(a), 0) - ifnull(SUM(b), 0) as ab_minus_cnt
+		, ifnull(SUM(c), 0) as c_cnt, ifnull(SUM(d), 0) as d_cnt
+		, ifnull(SUM(e), 0) as e_cnt, ifnull(SUM(f), 0) as f_cnt
+	FROM (
+		SELECT
+			coc.org
+			, (
+				SELECT COUNT(sc.user_id)
+				FROM student_courseenrollment sc
+				INNER JOIN course_overviews_courseoverview tt
+					ON sc.course_id = tt.id
+				WHERE coc.org = tt.org AND coc.id = tt.id
+			) as a
+			,(
+				SELECT COUNT(cgc.user_id)
+				FROM student_courseenrollment sc
+				INNER JOIN certificates_generatedcertificate cgc
+					ON sc.course_id = cgc.course_id AND sc.user_id = cgc.user_id
+						AND cgc.status = 'downloadable'
+				WHERE coc.id = cgc.course_id
+			) as g
+			, (
+				SELECT COUNT(sc.user_id)
+				FROM student_courseenrollment sc
+				INNER JOIN course_overviews_courseoverview tt
+					ON sc.course_id = tt.id
+				WHERE coc.org = tt.org  AND coc.id = tt.id AND sc.is_active = '1'
+			) as b
+			, COUNT(coc.id) as c
+			, (
+				SELECT COUNT(coc.id)
+				FROM course_overviews_courseoverview tt
+				WHERE coc.org = tt.org AND coc.id = tt.id AND coc.start > NOW()
+			) as d
+			,  (
+				SELECT COUNT(coc.id)
+				FROM course_overviews_courseoverview tt
+				WHERE coc.org = tt.org AND coc.id = tt.id AND coc.start < NOW()
+					AND (coc.end > NOW() OR coc.end IS NULL)
+			) as e
+			, (
+				SELECT COUNT(coc.id)
+				FROM course_overviews_courseoverview tt
+				WHERE coc.org = tt.org AND coc.id = tt.id AND coc.end < NOW()
+			) as f
+		FROM course_overviews_courseoverview coc
+	]]>	
+		WHERE 1=1
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(org)">
+			AND coc.org = #{org}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(begin)">
+		<![CDATA[
+			AND coc.start >= str_to_date(CONCAT(#{begin}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(end)">
+		<![CDATA[
+			AND coc.start <= str_to_date(CONCAT(#{end}, ' 23:59:59'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		</if>		
+		GROUP BY coc.org, coc.id
+	) temp
+	GROUP BY temp.org WITH ROLLUP
+	</select>
+	
+	<!-- 학생별 수강 현황 조회 쿼리문. -->
+	<select id="selectStudentCaseStatList" parameterType="map" resultType="map">
+	<![CDATA[
+	SELECT
+		au.email, au.id, aup.name as name, (YEAR(NOW()) - aup.year_of_birth) as age
+		, CASE LOWER(aup.gender)
+			WHEN 'F' THEN '여성'
+			WHEN 'M' THEN '남성'
+		END as gender
+		, (
+			SELECT IF(COUNT(cgc.user_id) = 0, '미수료', '수료')
+			FROM certificates_generatedcertificate cgc
+			WHERE coc.id = cgc.course_id AND au.id = cgc.user_id
+				AND cgc.status = 'downloadable'
+		) as completion
+		, (
+			SELECT TRUNCATE(ifnull(SUM(csm.grade), 0), 0)
+			FROM courseware_studentmodule csm
+			WHERE coc.id = csm.course_id AND au.id = csm.student_id
+		) as score
+		, coc.id as course_id, coc.display_name as course_name, coc.org as org
+		, (SELECT course_subject FROM course_mapping cm
+			WHERE coc.id = cm.course_id) as course_subject
+		, (SELECT course_type FROM course_mapping cm
+			WHERE coc.id = cm.course_id) as course_type
+		, CASE
+			WHEN coc.start < NOW() AND coc.end > NOW() THEN '개강'
+			WHEN coc.start > NOW() THEN '예정'
+			WHEN coc.end IS NULL THEN
+				CASE
+					WHEN coc.start < NOW() THEN '개강'
+					WHEN coc.start > NOW() THEN '예정'
+				END
+			WHEN coc.end < NOW() THEN '종료'
+		END as state
+		, DATE_FORMAT(coc.start, '%Y-%m-%d') as course_start
+		, DATE_FORMAT(coc.end, '%Y-%m-%d') as course_end, csc.structure_json
+	FROM course_overviews_courseoverview coc
+	INNER JOIN course_structures_coursestructure csc
+		ON coc.id = csc.course_id
+	INNER JOIN student_courseenrollment scr
+		ON coc.id = scr.course_id
+	INNER JOIN auth_user au
+		ON scr.user_id = au.id
+	INNER JOIN auth_userprofile aup
+		ON au.id = aup.user_id
+	]]>
+	WHERE coc.org = #{org}
+	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(isCompletion)">
+		<if test='isCompletion == "0" or isCompletion == "1"'>
+			AND (
+				SELECT COUNT(cgc.user_id)
+				FROM certificates_generatedcertificate cgc
+				WHERE coc.id = cgc.course_id AND au.id = cgc.user_id
+					AND cgc.status = 'downloadable') = #{isCompletion}
+		</if>
+		<if test='isCompletion == "2"'>
+			AND scr.is_active = '1'
+		</if>
+		<if test='isCompletion == "3"'>
+			AND scr.is_active = '0'
+		</if>
+	</if>
+	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(name)">
+		AND aup.name LIKE CONCAT(CONCAT('%', #{name}), '%')
+	</if>
+	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(email)">
+		AND au.email = #{email}
+	</if>
+	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(begin)">
+	<![CDATA[
+		AND coc.start >= str_to_date(CONCAT(#{begin}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')
+	]]>
+	</if>
+	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(end)">
+	<![CDATA[
+		AND coc.start <= str_to_date(CONCAT(#{end}, ' 23:59:59'), '%Y-%m-%d %H:%i:%s')
+	]]>
+	</if>
+	ORDER BY au.email
+	</select>
+	
+	<!-- 등록기관별 강좌 현황 쿼리문. -->
+	<select id="selectRegOrgCaseStatList" parameterType="map" resultType="map">
+	SELECT
+		temp.id, temp.display_name, temp.org, temp.course_subject, temp.course_type
+		, temp.student_cnt, temp.completion
+		, (temp.student_cnt - temp.completion) as non_completion, temp.active_cnt
+		, (temp.student_cnt - temp.active_cnt)as non_active_cnt
+		, temp.state, DATE_FORMAT(temp.start, '%Y-%m-%d') as course_start
+		, DATE_FORMAT(temp.end, '%Y-%m-%d') as course_end
+	FROM (
+		SELECT
+			coc.id, coc.display_name, coc.org, cm.course_subject, cm.course_type
+			, COUNT(sc.user_id) as student_cnt
+			, (
+				SELECT COUNT(sct.user_id)
+				FROM student_courseenrollment sct
+				INNER JOIN course_overviews_courseoverview tt
+					ON sct.course_id = tt.id
+				WHERE coc.org = tt.org  AND coc.id = tt.id AND sct.is_active = '1'
+			) as active_cnt
+			, CASE
+			<![CDATA[
+				WHEN coc.start < NOW() AND coc.end > NOW() THEN '개강'
+				WHEN coc.start > NOW() THEN '예정'
+				WHEN coc.end IS NULL THEN
+					CASE
+						WHEN coc.start < NOW() THEN '개강'
+						WHEN coc.start > NOW() THEN '예정'
+					END
+				WHEN coc.end < NOW() THEN '종료'
+			]]>
+			END as state
+			, coc.start, coc.end
+			, (
+				SELECT COUNT(cgc.user_id)
+				FROM student_courseenrollment sc2
+				INNER JOIN certificates_generatedcertificate cgc
+					ON sc2.course_id = cgc.course_id AND sc2.user_id = cgc.user_id
+				WHERE coc.id = cgc.course_id
+			) as completion
+		FROM course_overviews_courseoverview coc
+		INNER JOIN student_courseenrollment sc
+			ON coc.id = sc.course_id
+		LEFT OUTER JOIN course_mapping cm
+			ON coc.id = cm.course_id
+		WHERE coc.org = #{org}
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subject)">
+			AND cm.course_subject = #{subject}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(type)">
+			AND cm.course_type = #{type}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(courseName)">
+			AND coc.display_name LIKE CONCAT(CONCAT('%', #{courseName}), '%')
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(state)">
+		<![CDATA[
+			AND CASE
+				WHEN coc.start < NOW() AND coc.end > NOW() THEN '개강'
+				WHEN coc.start > NOW() THEN '예정'
+				WHEN coc.end IS NULL THEN
+					CASE
+						WHEN coc.start < NOW() THEN '개강'
+						WHEN coc.start > NOW() THEN '예정'
+					END
+				WHEN coc.end < NOW() THEN '종료'
+			END = #{state}
+		]]>
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(begin)">
+		<![CDATA[
+			AND coc.start >= str_to_date(CONCAT(#{begin}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(end)">
+		<![CDATA[
+			AND coc.start <= str_to_date(CONCAT(#{end}, ' 23:59:59'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		</if>
+		GROUP BY coc.id
+	) temp
+	UNION ALL
+	SELECT
+		'total', '', '', '', '', SUM(temp.student_cnt), sum(temp.completion)
+		, SUM(temp.student_cnt - temp.completion) as non_completion, SUM(temp.active_cnt)
+		, SUM(temp.student_cnt - temp.active_cnt)as non_active_cnt, '', '', ''
+	FROM (
+		SELECT
+			coc.id, coc.display_name, coc.org, cm.course_subject, cm.course_type
+			, COUNT(sc.user_id) as student_cnt
+			, (
+				SELECT COUNT(sct.user_id)
+				FROM student_courseenrollment sct
+				INNER JOIN course_overviews_courseoverview tt
+					ON sct.course_id = tt.id
+				WHERE coc.org = tt.org  AND coc.id = tt.id AND sct.is_active = '1'
+			) as active_cnt
+			, CASE
+			<![CDATA[
+				WHEN coc.start < NOW() AND coc.end > NOW() THEN '개강'
+				WHEN coc.start > NOW() THEN '예정'
+				WHEN coc.end IS NULL THEN
+					CASE
+						WHEN coc.start < NOW() THEN '개강'
+						WHEN coc.start > NOW() THEN '예정'
+					END
+				WHEN coc.end < NOW() THEN '종료'
+			]]>
+			END as state
+			, coc.start, coc.end
+			, (
+				SELECT COUNT(cgc.user_id)
+				FROM student_courseenrollment sc2
+				INNER JOIN certificates_generatedcertificate cgc
+					ON sc2.course_id = cgc.course_id AND sc2.user_id = cgc.user_id
+				WHERE coc.id = cgc.course_id
+			) as completion
+		FROM course_overviews_courseoverview coc
+		INNER JOIN student_courseenrollment sc
+			ON coc.id = sc.course_id
+		LEFT OUTER JOIN course_mapping cm
+			ON coc.id = cm.course_id
+		WHERE coc.org = #{org}
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(subject)">
+			AND cm.course_subject = #{subject}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(type)">
+			AND cm.course_type = #{type}
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(courseName)">
+			AND coc.display_name LIKE CONCAT(CONCAT('%', #{courseName}), '%')
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(state)">
+		<![CDATA[
+			AND CASE
+				WHEN coc.start < NOW() AND coc.end > NOW() THEN '개강'
+				WHEN coc.start > NOW() THEN '예정'
+				WHEN coc.end IS NULL THEN
+					CASE
+						WHEN coc.start < NOW() THEN '개강'
+						WHEN coc.start > NOW() THEN '예정'
+					END
+				WHEN coc.end < NOW() THEN '종료'
+			END = #{state}
+		]]>
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(begin)">
+		<![CDATA[
+			AND coc.start >= str_to_date(CONCAT(#{begin}, ' 00:00:00'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(end)">
+		<![CDATA[
+			AND coc.start <= str_to_date(CONCAT(#{end}, ' 23:59:59'), '%Y-%m-%d %H:%i:%s')
+		]]>
+		</if>
+		GROUP BY coc.id
+	) temp
+	</select>
+	
+	<!-- 강좌별 학생의 학습활동 현황 조회 쿼리문. -->
+	<select id="selectCourseActivityList" parameterType="map" resultType="map">
+	SELECT student_id, course_id, module_type, module_id, state
+		, DATE_FORMAT(DATE_ADD(modified, INTERVAL +9 HOUR),'%Y-%m-%d %H:%i:%s') as modified
+	FROM courseware_studentmodule
+	WHERE course_id = #{courseId} AND student_id = #{userId}
+		AND module_type IN ('problem', 'video')
+	</select>
+	
+	<!-- 강좌 구조 json 데이터 조회 쿼리문. -->
+	<select id="selectCourseStructureJson" parameterType="map" resultType="java.lang.String">
+	SELECT structure_json
+	FROM course_structures_coursestructure
+	WHERE course_id = #{courseId}
+	</select>
+</mapper>

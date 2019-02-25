@@ -1,0 +1,30 @@
+<div class="_popup _langko">
+    <div id="_wrap">
+        <header id="_popupHeader">
+            <h1>참여 협의회 추가</h1>
+        </header>
+        <div id="_articleContent" class="_articleContent">
+            <div class="_insert">
+                <div class="sch_code">
+                    <ul>
+                        <!-- 참여 협의회 리스트 있을 경우 style="display:none"  -->
+                        <li ng-show="!$root.university.mou.unAttachedGroupList.length">선택할 수 있는 참여 협의회가 없습니다. </li>
+                        <!-- //참여 협의회 리스트 있을 경우  -->
+                        <li class="active" ng-repeat="data in $root.university.mou.unAttachedGroupList">
+                            <input type="checkbox" id="check_{{data.code}}" ng-model="data.checked">
+                            <label for="check_{{data.code}}">
+                                <span></span>
+                            </label>{{data.codeName}}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="_areaButton">
+                <div class="_center">
+                    <span class="_button _large blackBtn"><a ng-click="saveGroup();">저장</a></span>
+                    <span class="_button _large borderBtn"><a ng-click="closeThisDialog();" style="cursor: pointer;">취소</a></span>
+                </div>
+            </div>
+        </div><!-- #_articleContent" -->
+    </div>
+</div>

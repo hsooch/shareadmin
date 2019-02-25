@@ -1,0 +1,51 @@
+<div class="_popup _langko">
+	<div id="_wrap">
+		<div class="_popupInner">
+			<div class="_popHeader">
+				 <span class="pop_Title">발송 내용</span>
+				<a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+			</div>
+			<div id="_articleContent" class="_articleContent">
+				<div class="_insert">
+	                   <div class="_table">
+	                       <table class="_table _view w100 borTop0">
+	                           <caption>발송 내용 표</caption>
+	                           <colgroup>
+	                               <col style="width:150px;">
+	                               <col>
+	                           </colgroup>
+	                           <tbody>
+	                               <tr>
+	                                   <th>제목<span class="mark"></span></th>
+	                                   <td>{{$root.message.smsSendManagement.messageInfo.title}}</td>
+	                               </tr>
+	                               <!-- SMS발송시 등록한 이미지 노출 
+	                                   발송한 이미지가 없을 경우 비노출 style="display:none"-->
+	                               <tr ng-show="$root.message.smsSendManagement.messageInfo.imageFileKey">
+	                                   <th>미리보기<span class="mark"></span></th>
+	                                   <td class="popImgWrap">
+	                                       <div class="imgfile">
+	                                           <img src="../../images/temp/class_img_bic.jpg" alt="">
+	                                       </div>
+	                                   </td>
+	                               </tr>
+	                               <!--// SMS발송시 등록한 이미지 노출 /없을 경우 비노출-->
+	                               <tr>
+	                                   <th>내용<span class="mark"></span></th>
+	                                   <td>{{$root.message.smsSendManagement.messageInfo.contents}}
+	                                   <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+	                                   </td>
+	                               </tr>
+	                           </tbody>
+	                       </table>
+	                   </div>
+				</div>
+				<div class="_areaButton">
+	                   <div class="_center">
+	                       <span class="_button _large blackBtn"><a ng-click="closeThisDialog();">닫기</a></span>
+	                   </div>
+	               </div>
+			</div><!-- #_articleContent" -->
+		</div>
+	</div>
+</div>

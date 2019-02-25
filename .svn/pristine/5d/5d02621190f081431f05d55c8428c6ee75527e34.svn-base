@@ -1,0 +1,129 @@
+<div class="_popup _langko">
+    <div id="_wrap">
+        <div class="_popupInner">
+            <div class="_popHeader">
+                <span class="pop_Title"> 등급 전환 설정</span>
+                <a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+            </div>
+            <div class="_popContent">
+                <div class="popconBox">
+		            <header id="_popupHeader">
+		                <h1 class="borBot0">등급 전환 설정</h1>
+		            </header>
+			        <div id="_articleContent" class="_articleContent">
+			            <div class="_insert">
+		                    <p class="popup_tabHeader">{{$root.exchange.scoreOut.gradeUnivName}}</span></p>
+		                    <div class="popup_tabCont">
+		                        <p>* 등급으로 전환할 백분위 점수를 입력하세요.</p>
+		                        <p>* 등급별 백분위 점수에 겹치는 점수가 있으면 안됩니다.</p>
+		                    </div>
+		                    <div class="grade_code">
+		                        <table class="_table _list w100 mt10">
+			                        <caption>표 제목</caption>
+			                        <colgroup>
+			                            <col style="width:10%;">
+			                            <col style="width:35%;">
+			                            <col style="width:10%;">
+			                            <col style="width:35%;">
+			                            <col style="width:10%;">
+			                        </colgroup>
+		                            <thead>
+		                                <tr>
+		                                    <th colspan="2" class="borline">4.5 만점 기준</th>
+		                                    <th colspan="2" class="borline">4.3 만점 기준</th>
+		                                    <th rowspan="2">삭제</th>
+		                                </tr>
+		                                <tr>
+		                                    <th>등급</th>
+		                                    <th>점수 범위</th>
+		                                    <th>등급</th>
+		                                    <th>점수 범위</th>
+		                                </tr>
+		                            </thead>
+		                            <tbody>
+		                                <tr id="gradeList_{{$index}}" ng-repeat="gradeInfo in $root.exchange.scoreOut.exchangeResultInfo.gradeListType2 | orderBy:gradeName:false">
+		                                    <td class="_aL"><input kr-input type="text" name="type2Name" id="type2Name_{{$index}}" value="{{$root.exchange.scoreOut.exchangeResultInfo.gradeListType2[$index].gradeName}}" placeholder="" class="w100" maxlength="3"></td>
+		                                    <td>
+		                                        <input type="text" name="type2Min" id="type2Min_{{$index}}" value="{{$root.exchange.scoreOut.exchangeResultInfo.gradeListType2[$index].scoreMin}}" placeholder="" class="w35" maxlength="3" numberOnly>
+		                                        <label for="time_minute" class="left0"></label>
+		                                        <input type="text" name="type2Max" id="type2Max_{{$index}}" value="{{$root.exchange.scoreOut.exchangeResultInfo.gradeListType2[$index].scoreMax}}" placeholder="" class="w35 ml30" maxlength="3" numberOnly>
+		                                    </td>
+		                                    
+		                                    
+		                                    <td class="_aL"><input kr-input type="text" name="type3Name" id="type3Name_{{$index}}" value="{{$root.exchange.scoreOut.exchangeResultInfo.gradeListType3[$index].gradeName}}" placeholder="" class="w100" maxlength="3"></td>
+		                                    <td>
+		                                        <input type="text" name="type3Min" id="type3Min_{{$index}}" value="{{$root.exchange.scoreOut.exchangeResultInfo.gradeListType3[$index].scoreMin}}" placeholder="" class="w35" maxlength="3" numberOnly>
+		                                        <label for="time_minute" class="left0"></label>
+		                                        <input type="text" name="type3Max" id="type3Max_{{$index}}" value="{{$root.exchange.scoreOut.exchangeResultInfo.gradeListType3[$index].scoreMax}}" placeholder="" class="w35 ml30" maxlength="3" numberOnly>
+		                                    </td>
+		                                    <td>
+                                               <span ng-if="$index > 0" class="_button _minimum _save"><a href="javascript:void(0);" ng-click="removeGradeTrance($index);">삭제</a></span>
+		                                    </td>
+		                                </tr>
+		                                <tr ng-if="$root.exchange.scoreOut.exchangeResultInfo.gradeListType2 == null || $root.exchange.scoreOut.exchangeResultInfo.gradeListType2.length == 0">
+		                                    <td class="_aL"><input kr-input type="text" name="type2Name" id="type2Name_0" placeholder="" class="w100" maxlength="3"></td>
+		                                    <td>
+		                                        <input type="text" name="type2Min" id="type2Min_0" placeholder="" class="w35" maxlength="3" numberOnly>
+		                                        <label for="time_minute" class="left0"></label>
+		                                        <input type="text" name="type2Max" id="type2Max_0" placeholder="" class="w35 ml30" maxlength="3" numberOnly>
+		                                    </td>
+		                                    <td class="_aL"><input kr-input type="text" name="type3Name" id="type3Name_0" placeholder="" class="w100" maxlength="3"></td>
+		                                    <td>
+		                                        <input type="text" name="type3Min" id="type3Min_0" placeholder="" class="w35" maxlength="3" numberOnly>
+		                                        <label for="time_minute" class="left0"></label>
+		                                        <input type="text" name="type3Max" id="type3Max_0" placeholder="" class="w35 ml30" maxlength="3" numberOnly>
+		                                    </td>
+		                                    <td class="_aL">
+		                                    </td>
+		                                </tr>
+		                            </tbody>
+		                        </table>
+		                        <span class="_button _minimum _save pl10 mt10"><a href="javascript:void(0);" class="btnAdd" ng-click="addGradeTrance()">추가</a></span>
+		                    </div>
+		                    <table class="_table _view w100 mt20">
+		                        <caption>코드 관리 표</caption>
+		                        <colgroup>
+		                            <col style="width:80px;">
+		                            <col>
+		                        </colgroup>
+		                        <tbody>
+		                            <tr>
+		                                <th>적용<br>여부</th>
+		                                <td colspan="3">
+		                                    <div class="radioWrap">
+		                                        <div class="radio">
+		                                            <a href="javascript:;">
+		                                                <input kr-input type="radio" id="rad_Chek01" name="itmSoldout" title="적용안함" ng-model="$root.exchange.scoreOut.exchangeResultInfo.gradeTranceType" value="1">
+		                                                <label for="rad_Chek01"><span></span>적용안함</label>
+		                                            </a>
+		                                        </div>
+		                                        <div class="radio">
+		                                            <a href="javascript:;">
+		                                                <input kr-input type="radio" id="rad_Chek02" name="itmSoldout" title="4.5만점 적용" ng-model="$root.exchange.scoreOut.exchangeResultInfo.gradeTranceType" value="2">
+		                                                <label for="rad_Chek02"><span></span>4.5만점 적용</label>
+		                                            </a>
+		                                        </div>
+		                                         <div class="radio">
+		                                            <a href="javascript:;">
+		                                                <input kr-input type="radio" id="rad_Chek03" name="itmSoldout" title="4.3만점 적용" ng-model="$root.exchange.scoreOut.exchangeResultInfo.gradeTranceType" value="3">
+		                                                <label for="rad_Chek03"><span></span>4.3만점 적용</label>
+		                                            </a>
+		                                        </div>
+		                                    </div>
+		                                </td>
+		                            </tr>
+		                        </tbody>
+		                    </table>
+		                </div>
+		                <div class="_areaButton">
+		                    <div class="_center">
+		                        <span class="_button _large blackBtn"><a href="javascript:void(0);" ng-click="saveGradeTranceInfo()">저장</a></span>
+		                        <span class="_button _large borderBtn"><a href="javascript:void(0);" ng-click="closeThisDialog()">취소</a></span>
+		                    </div>
+		                </div>
+			        </div><!-- #_articleContent" -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

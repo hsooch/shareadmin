@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="userMapper">
+
+    <select id="getUserCount" parameterType="map" resultType="java.lang.Integer">
+    	/* userMapper.getUserCount */
+        SELECT COUNT(0) FROM TBL_USER WHERE 1=1
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userId)">
+        	AND USER_ID = #{userId}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(oldUserPwd)">
+        	AND ( USER_PWD = #{oldUserPwd} OR USER_PWD_TMPR = #{oldUserPwd} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isEmpty(oldUserPwd) and @org.apache.commons.lang3.StringUtils@isNotEmpty(userPwd)">
+        	AND USER_PWD = #{userPwd}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userDi)">
+        	AND USER_SEQ = (SELECT USER_SEQ FROM TBL_SELF_AUTH WHERE USER_DI = #{userDi})
+        </if>
+    </select>
+    
+    <select id="selectSiteId" parameterType="map" resultType="java.lang.String">
+    	/* userMapper.selectSiteId */
+    	SELECT TOP 1 SITE_ID
+		FROM SHARE_PORTAL.DBO.WZD_SITE_INFO
+		WHERE UNIV_CD = #{univCode}
+    </select>
+    
+    <insert id="insertUserAccount" parameterType="map">
+    	/* userMapper.insertUserAccount */
+    	INSERT INTO TBL_USER(
+			  USER_ID			/* 사용자 아이디(이메일) */
+			, USER_PWD			/* 비밀번호 */
+			, USER_PWD_TMPR		/* 임시비밀번호 */
+			, USER_NAME			/* 사용자명 */
+			, USER_EMAIL		/* 이메일 */
+			<!-- , SUB_EMAIL			/* 서브 이메일 */ -->
+			, USER_PIN			/* 개인식별번호 */
+			, REG_DT			/* 신청일 */
+			<!-- , INDVDLINFO_AGREDE /* 개인정보 동의날짜 */ -->
+			, USER_TYPE			/* 사용자 유형 */
+			, CONFM_YN			/* 승인여부 */
+			, PWD_ERROR_CNT		/* 비밀번호 오류 횟수 */
+			, SITE_ID			/* (cms용) */
+			, UNIV_CODE			/* 대학코드 */
+			, DEPARTMENT		/* 학과(부서)명 */
+			, BIRTHDAY			/* 생년월일 */
+			, TEL_NO			/* 일반 전화번호 */
+			, CELL_NO			/* 휴대폰 번호 */
+			, SERVICE_GROUP_SEQ	/* default 1 (cms용)*/
+			, MF_TYPE			/* 성별 */
+			, STUDENT_NUMBER	/* 학번 */
+			, STATUS_CODE		/* 사용자 상태 */
+    	)
+    	VALUES(
+			  #{userId}
+			, #{userPwd}
+			, #{userPwd}
+			, #{userName}
+			, #{userEmail}
+			<!-- , #{subEmail} -->
+			, NULL
+			, GETDATE()
+			<!-- , GETDATE() -->
+			, #{userType}
+			, 'N'
+			, 0
+			, #{siteId}
+			, #{univCode}
+			, #{department}
+			, #{birthday}
+			, #{telNo}
+			, #{cellNo}
+			, 1
+   			, #{mfType}
+   			, #{studentNumber}
+ 			, #{statusCode}
+    	)
+    	<selectKey keyProperty="userSeq" resultType="java.lang.Integer" order="AFTER">
+        	SELECT IDENT_CURRENT('TBL_USER')
+    	</selectKey>
+    </insert>
+    
+    <insert id="insertUserSelfAuth" parameterType="map">
+    	/* userMapper.insertUserSelfAuth */
+    	INSERT INTO TBL_SELF_AUTH(
+    		  USER_SEQ			/* 사용자 시퀀스 */
+    		, USER_CI			/* KCP CI */
+    		, USER_DI			/* KCP DI */
+    		, ENC_CI_VALUE		/* KCP CI ENC VALUE */
+    		, ENC_DI_VALUE		/* KCP DI ENC VALUE */
+    	)
+    	VALUES(
+    		  #{userSeq}
+    		, #{userCi}
+    		, #{userDi}
+    		, #{encCiValue}
+    		, #{encDiValue}
+    	)
+    </insert>
+    <!-- 
+    <insert id="insertUserGuardian" parameterType="map">
+    	/* userMapper.insertUserGuardian */
+    	INSERT INTO TBL_USER_GUARDIAN(
+    		  GUARDIAN_NAME			/* 보호자 명 */
+    		, BIRTHDAY				/* 보호자 생년월일 */
+    		, CELL_NO				/* 보호자 전화번호 */
+    		, MF_TYPE				/* 보호자 성별 */
+    		, GUARDIAN_CI			/* KCP CI */
+    		, GUARDIAN_DI			/* KCP DI */
+    		, ENC_CI_VALUE		/* KCP CI ENC VALUE */
+    		, ENC_DI_VALUE		/* KCP DI ENC VALUE */
+    	)
+    	VALUES(
+    		  #{guardianName}
+    		, #{guardianBirthday}
+    		, #{guardianCellNo}
+    		, #{guardianMfType}
+    		, #{guardianCi}
+    		, #{guardianDi}
+    		, #{guardianEncCiValue}
+    		, #{guardianEncDiValue}
+    	)
+    </insert>
+     -->
+    
+    <update id="updateUserPwd" parameterType="map">
+    	/* userMapper.updateUserPwd */
+    	UPDATE TBL_USER
+    	SET
+    		  USER_PWD			= #{userPwd}
+    		, USER_PWD_TMPR		= NULL
+    		, PWD_ERROR_CNT		= 0
+    		, PWD_CHANGE_DATE 	= GETDATE()
+    	WHERE USER_ID = #{userId}
+    	AND USER_PWD = #{oldUserPwd}
+    </update>
+    
+    <update id="updateUserPwdTmpr" parameterType="map">
+    	/* userMapper.updateUserPwdTmpr */
+    	UPDATE TBL_USER
+    	SET
+    		USER_PWD_TMPR		= #{userPwdTmpr}
+    		, USER_PWD			= #{userPwdTmpr}
+    		, PWD_ERROR_CNT		= 0
+    		, PWD_CHANGE_DATE 	= GETDATE()
+    	WHERE USER_SEQ = #{userSeq}
+    	AND USER_ID = #{userId}
+    </update>
+    
+    <update id="updateUserAccountWakeUp" parameterType="map">
+    	/* userMapper.updateUserAccountWakeUp */
+    	UPDATE TBL_USER
+    	SET 
+    		  LAST_LOGINDE      = GETDATE()
+    		, PWD_ERROR_CNT		= 0
+    		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(statusCode)">
+   			, STATUS_CODE = #{statusCode}
+			</if>
+    	WHERE USER_ID = #{userId}
+    	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userPwd)">
+        	AND USER_PWD = #{userPwd}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userDi)">
+        	AND USER_SEQ = (SELECT USER_SEQ FROM TBL_SELF_AUTH WHERE USER_DI = #{userDi})
+        </if>
+        <selectKey resultType="java.lang.Integer" keyProperty="userSeq" order="AFTER">
+	        SELECT USER_SEQ
+	        FROM TBL_USER
+	        WHERE USER_ID = #{userId}
+	    	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userPwd)">
+	        	AND USER_PWD = #{userPwd}
+	        </if>
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userDi)">
+	        	AND USER_SEQ = (SELECT USER_SEQ FROM TBL_SELF_AUTH WHERE USER_DI = #{userDi})
+	        </if>
+        </selectKey>
+    </update>
+    
+    <select id="selectUserInfo" parameterType="map" resultType="userVO">
+    	/* userMapper.selectUserInfo */
+ 		SELECT
+ 			  A.USER_SEQ
+ 			, A.USER_ID
+ 			, A.USER_PWD
+ 			, A.USER_PWD_TMPR
+			, A.USER_NAME
+			, A.USER_EMAIL
+			, A.USER_PIN
+			, REPLACE(CONVERT(VARCHAR, A.REG_DT, 120), '-', '.') AS REG_DT
+			, REPLACE(CONVERT(VARCHAR, A.MOD_DT, 120), '-', '.') AS MOD_DT
+			, A.MOD_USER_SEQ
+			, B.INDVDLINFO_AGREDE
+			, A.USER_TYPE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = A.USER_TYPE) AS USER_TYPE_NAME
+			, A.CONFM_YN
+			, CONVERT(VARCHAR, A.CONFM_DT, 102) AS CONFM_DT
+			, A.CONFM_USER_SEQ
+			, REPLACE(CONVERT(VARCHAR, A.LAST_LOGINDE, 120), '-', '.') AS LAST_LOGINDE
+			, A.PWD_ERROR_CNT
+			, A.SITE_ID
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = A.UNIV_CODE) AS UNIV_NAME
+			, (SELECT PARENT_CODE FROM TBL_CODE WHERE CODE = A.UNIV_CODE) AS UNIV_AREA_CD
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = (SELECT PARENT_CODE FROM TBL_CODE WHERE CODE = A.UNIV_CODE)) AS UNIV_AREA_NAME
+			, A.COLLEGE_NAME
+			, A.STUDENT_GRADE_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = A.STUDENT_GRADE_CODE) AS STUDENT_GRADE_NAME
+			, A.DEPARTMENT
+			, A.BIRTHDAY
+			, CASE WHEN (CONVERT(INT, SUBSTRING(CONVERT(VARCHAR, GETDATE(), 112), 1, 4)) - CONVERT(INT, SUBSTRING(A.BIRTHDAY, 1, 4))) <![CDATA[<]]> 14 THEN 'Y'
+				ELSE 'N'
+				END AS UNDER_14_YEARS
+			, A.TEL_NO
+			, A.CELL_NO
+			, A.SERVICE_GROUP_SEQ
+			, A.PWD_CHANGE_DATE
+			, A.MF_TYPE
+			, CASE A.MF_TYPE
+				WHEN '01' THEN '남'
+				WHEN '02' THEN '여'
+				ELSE ''
+				END AS MF_TYPE_DESC
+			, A.STUDENT_NUMBER
+			, A.STATUS_CODE AS USER_STATUS_CD
+			, CASE
+				WHEN A.STATUS_CODE = 'UST01000004' THEN (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = A.STATUS_CODE)
+				WHEN A.STATUS_CODE = 'UST01000003' THEN (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = A.STATUS_CODE)
+				WHEN A.STATUS_CODE = 'UST01000002' THEN (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = A.STATUS_CODE)
+				WHEN A.STATUS_CODE = 'UST01000001' THEN (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = A.STATUS_CODE)
+				WHEN (A.CONFM_YN = 'N' AND (A.STATUS_CODE IS NULL OR A.STATUS_CODE = 'UST01000005') AND B.ACCOUNT_REJECT_REASON IS NOT NULL) THEN '반려'
+				ELSE '대기'
+			  END USER_STATUS_NAME
+			, CASE
+				WHEN A.STATUS_CODE = 'UST01000004' THEN SUBSTRING(B.INACTIVE_DT, 1, 4) + '.' + SUBSTRING(B.INACTIVE_DT, 5, 2) + '.' + SUBSTRING(B.INACTIVE_DT, 7, 2) <!-- 휴면일 -->
+				WHEN A.STATUS_CODE = 'UST01000003' THEN CONVERT(VARCHAR, B.WITHDRAW_DT, 23) <!-- 강제탈퇴일 -->
+				WHEN A.STATUS_CODE = 'UST01000002' THEN CONVERT(VARCHAR, B.WITHDRAW_DT, 23) <!-- 탈퇴일 -->
+				WHEN (A.STATUS_CODE = 'UST01000001' AND A.CONFM_YN = 'Y' AND B.WITHDRAW_REQ_DT IS NOT NULL) THEN CONVERT(VARCHAR, B.WITHDRAW_REQ_DT, 23) <!-- 탈퇴 신청일 -->
+				WHEN (A.CONFM_YN = 'N' AND (A.STATUS_CODE IS NULL OR A.STATUS_CODE = 'UST01000005')) THEN CONVERT(VARCHAR, A.REG_DT, 23) <!-- 가입 신청일 -->
+				ELSE A.CONFM_DT
+			  END AS USER_STATUS_DT <!-- 회원 상태 변경 날짜 -->
+			, B.WITHDRAW_REASON
+			, B.WITHDRAW_REJECT_REASON
+			, CONVERT(VARCHAR, B.WITHDRAW_DT, 102) AS WITHDRAW_DT
+			, REPLACE(CONVERT(VARCHAR, B.WITHDRAW_REQ_DT, 120), '-', '.') AS WITHDRAW_REQ_DT
+			, B.ACCOUNT_REJECT_REASON
+			, SUBSTRING(B.INACTIVE_DT, 1, 4) + '.' + SUBSTRING(B.INACTIVE_DT, 5, 2) + '.' + SUBSTRING(B.INACTIVE_DT, 7, 2) AS INACTIVE_DT
+			, C.GUARDIAN_NAME
+			, C.BIRTHDAY AS GUARDIAN_BIRTH_DAY
+			, C.CELL_NO AS GUARDIAN_CELL_NO
+			, C.MF_TYPE AS GUARDIAN_MF_TYPE
+			, CASE C.MF_TYPE
+				WHEN '01' THEN '남'
+				WHEN '02' THEN '여'
+				ELSE ''
+				END AS GUARDIAN_MF_TYPE_DESC
+		FROM TBL_USER A
+		LEFT JOIN TBL_USER_DETAIL B ON A.USER_SEQ = B.USER_SEQ
+		LEFT JOIN TBL_USER_GUARDIAN C ON A.USER_SEQ = C.USER_SEQ
+		WHERE 1=1
+        <if test="userSeq != null">
+        	AND A.USER_SEQ = #{userSeq}
+        </if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userId)">
+        	AND A.USER_ID = #{userId}
+        </if>
+    </select>
+    
+    <select id="selectUserId" parameterType="map" resultType="java.lang.String">
+    	/* userMapper.selectUserId */
+    	SELECT USER_ID
+    	FROM TBL_USER
+    	WHERE USER_SEQ = (SELECT USER_SEQ FROM TBL_SELF_AUTH WHERE USER_DI = #{userDi})
+    </select>
+    
+    
+    <update id="withdrawMember" parameterType="map">
+    	/* userMapper.withdrawMember */
+    	DECLARE @SEQ INT
+		SET @SEQ = (SELECT USER_SEQ FROM TBL_USER WHERE USER_ID = #{USERID})
+
+    	IF NOT EXISTS (SELECT 1 FROM TBL_USER_DETAIL WHERE USER_SEQ = @SEQ)
+    		INSERT INTO TBL_USER_DETAIL(
+    			USER_SEQ,
+    			WITHDRAW_REASON,
+    			WITHDRAW_REQ_DT
+    		)
+    		VALUES(
+    			@SEQ,
+    			#{REASON},
+    			GETDATE()
+    		)
+    	ELSE
+    	UPDATE TBL_USER_DETAIL
+    	SET
+	   		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(REASON)">
+	    		WITHDRAW_REASON = #{REASON},
+	   		</if>
+	    		WITHDRAW_REQ_DT = GETDATE()
+    	WHERE
+    		USER_SEQ = @SEQ
+    </update>
+
+	<update id="updateUserInfo" parameterType="map">
+		/* userMapper.updateUserInfo */
+		DECLARE @SEQ INT
+		SET @SEQ = #{userSeq}
+		
+		UPDATE TBL_USER
+		SET
+			MOD_DT = GETDATE()
+			, MOD_USER_SEQ = #{modUserSeq}
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(department)">
+				,DEPARTMENT = #{department}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(univCode)">
+				,SITE_ID = #{siteId}
+				,UNIV_CODE = #{univCode}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(birthday)">
+				,BIRTHDAY = #{birthday}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(telNo)">
+				,TEL_NO = #{telNo}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(cellNo)">
+				,CELL_NO = #{cellNo}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userEmail)">
+				,USER_EMAIL = #{userEmail}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(mfType)">
+   				, MF_TYPE = #{mfType}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(studentNumber)">
+   				, STUDENT_NUMBER = #{studentNumber}
+			</if>
+			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(statusCode)">
+   				, STATUS_CODE = #{statusCode}
+			</if>
+		WHERE
+			USER_SEQ = @SEQ
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userId)">
+			AND USER_ID = #{userId}
+		</if>
+	</update>
+	
+	<select id="selectUserList" parameterType="map" resultType="umap">
+		SELECT USER_SEQ, USER_NAME
+		FROM TBL_USER
+	</select>
+
+</mapper>

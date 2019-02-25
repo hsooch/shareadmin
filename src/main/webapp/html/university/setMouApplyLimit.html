@@ -1,0 +1,44 @@
+<div class="_popup _langko">
+    <div id="_wrap">
+        <header id="_popupHeader">
+            <h1 class="borBot0">학점교류신청 인원 제한</h1>
+        </header>
+        <div id="_articleContent" class="_articleContent">
+            <div class="_insert">
+                <div class="sch_code">
+                    <table class="_table _list w100">
+                        <caption>표 제목</caption>
+                        <colgroup>
+                            <col style="width:80%;">
+                            <col style="width:20%;">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th>대학교</th>
+                            <th>인원제한</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- 대학이 있을 경우  style="display:none"  -->
+                        <tr ng-show="mouPopList.length === 0">
+                            <td colspan="2">인원제한을 할 수 있는 대학이 없습니다.</td>
+                        </tr>
+                        <!-- //대학이 있을 경우 -->
+                        <tr ng-repeat="mou in mouPopList">
+                            <td class="_aL">({{mou.areaName}}){{mou.mouUnivName}} </td>
+                            <td><input kr-input type="text" placeholder="" class="w90" ng-model="mou.limitCnt"></td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="_areaButton">
+                <div class="_center">
+                    <span class="_button _large blackBtn"><a ng-click="saveLimitCnt();" style="cursor: pointer;">저장</a></span>
+                    <span class="_button _large borderBtn"><a ng-click="closeThisDialog();" style="cursor: pointer;">취소</a></span>
+                </div>
+            </div>
+        </div><!-- #_articleContent" -->
+    </div>
+</div>

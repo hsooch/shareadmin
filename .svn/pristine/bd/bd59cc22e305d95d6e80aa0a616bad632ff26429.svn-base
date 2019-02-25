@@ -1,0 +1,67 @@
+<div class="_popup _langko">
+	<div id="_wrap">
+		<div id="_articleContent" class="_articleContent">
+			<div class="_insert">
+                   <div class="_table">
+                       <h2 class="cont_Title">기본정보</h2>
+                       <table class="_table _view w100">
+                           <caption>기본정보 표</caption>
+                           <colgroup>
+                               <col style="width:150px;">
+                               <col>
+                               <col style="width:150px;">
+                                <col>
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>분류<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.seminarType }}</td>
+                                    <th>학교구분<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.univCodeName }}</td>
+                                </tr>
+                                <tr>
+                                    <th>강좌명<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.title }}</td>
+                                    <th>접수기간<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.applyStartDay }} ~ {{$root.seminar.confirm.seminarInfo.applyEndDay }}</td>
+                                </tr>
+                                <tr>
+                                    <th>강의날짜<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.classDay }}</td>
+                                    <th>요일 및 시간<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.classStartTime }} ~ {{$root.seminar.confirm.seminarInfo.classEndTime }}</td>
+                                </tr>
+                                <tr>
+                                    <th>수강가능인원<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.maxUserCnt }}</td>
+                                    <th>강사명<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.teacherName }}</td>
+                                </tr>
+                                <tr>
+                                    <th>장소<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.place }}</td>
+                                    <th>서울시교류여부<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.exchangeYn }}</td>
+                                </tr>
+                                <tr>
+                                    <th>승인처리유형<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.acceptType }}</td>
+                                    <th>상태<span class="mark"></span></th>
+                                    <td>{{$root.seminar.confirm.seminarInfo.seminarStatus }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <h2 class="cont_Title"  style="margin-bottom: 20px;">강의내용</h2>
+                        <div name="" class="mt0" style="height: 300px;">
+                        	<div id="contents" style="height:100%; background-color: #ffffff; padding: 15px;"></div>
+                        </div>
+                    </div>
+				</div>
+				<div class="_areaButton" style="margin-top: 30px;">
+					<div class="_center">
+						<span class="_button _large blackBtn"><a ng-click="closeThisDialog();">닫기</a></span>
+					</div>
+				</div>
+			</div><!-- #_articleContent" -->
+	</div>
+</div>

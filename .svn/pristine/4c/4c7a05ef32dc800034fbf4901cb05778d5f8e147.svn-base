@@ -1,0 +1,123 @@
+<div class="_popup _langko">
+    <div id="_wrap">
+        <header id="_popupHeader">
+            <h1 class="borBot0">계정전환</h1>
+        </header>
+        <div id="_articleContent" class="_articleContent mwx1100">
+            <div class="_insert">
+                <div class="_articleContent">
+                    <div class="_border _write mt10">
+                        <div class="_inner">
+                            <fieldset>
+                                <legend>월별 접속통계 조회 </legend>
+                                <form name="selYearForm" method="post">
+                                    <div class="_form _both">
+                                        <div class="_insert tableWrap w1000">
+                                            <div class="innTable">
+                                                <table class="w80">
+                                                    <colgroup>
+                                                        <col style="width:8%">
+                                                        <col style="width:13%">
+                                                        <col style="width:7%">
+                                                        <col style="width:14%">
+                                                        <col style="width:7%">
+                                                        <col style="width:22%">
+                                                        <col style="width:7%">
+                                                        <col style="width:22%">
+                                                    </colgroup>
+                                                    <tbody>
+                                                    <tr>
+                                                        <td><label for="sch_kind" class="pl10">소속대학</label></td>
+                                                        <td>
+                                                            <select name="sch_kind" id="sch_kind" class="_selectBox _fL wx150" ng-model="selectAreaCode">
+                                                                <option value="">전체</option>
+                                                                <option value="{{code.code}}" ng-repeat="code in areaCodeList | orderBy:'codeIndex'">
+                                                                    {{code.codeName}}
+                                                                </option>
+                                                            </select>
+                                                        </td>
+                                                        <td colspan="2">
+                                                            <select name="sch_kind2" id="sch_kind2" class="_selectBox _fL wx180" ng-model="selectUnivCode" ng-show="selectAreaCode">
+                                                                <option value="">전체</option>
+                                                                <option value="{{code.code}}" ng-repeat="code in univCodeList | orderBy:'codeIndex'">
+                                                                    {{code.codeName}}
+                                                                </option>
+                                                            </select>
+                                                        </td>
+                                                        <td><label for="sch_search" class="pl20">검색</label></td>
+                                                        <td colspan="3">
+                                                            <select name="sch_search" id="sch_search" class="_selectBox _fL wx120" ng-model="searchUserType">
+                                                                <option value="">전체</option>
+                                                                <option value="S">학생</option>
+                                                                <option value="L">일반시민</option>
+                                                            </select>
+                                                            <input type="text" placeholder="아이디/성명" class="wx160" ng-model="searchKeyword" kr-input>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="_areaButton innerBtnB">
+                                                <div class="_right">
+                                                    <span class="_button _small _active searchBtn"><input type="button" value="조회" ng-click="searchBtnClick();"></span>
+                                                    <span class="_button _small resetBtn"><input type="button" value="초기화" ng-click="clearSearchParam();"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </fieldset>
+                        </div>
+                    </div>
+                    <div class="_listHead">
+                        <div class="_count">
+                            총  <strong>{{totalCnt}}</strong>  명이 검색되었습니다.
+                        </div>
+                    </div>
+                    <table class="_table _list w100">
+                        <caption>표 제목</caption>
+                        <colgroup>
+                            <col style="width:80px;">
+                            <col style="width:10%;">
+                            <col style="width:10%;">
+                            <col style="width:15%;">
+                            <col style="width:10%;">
+                            <col style="width:10%;">
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th><span ng-class="{lineUp:sortField === 'userTypeName'}" ng-click="sortFieldClick('userTypeName');" style="cursor: pointer;">회원유형<a ng-class="{up:order === 'asc', down:order === 'desc'}"></a></span></th>
+                            <th><span ng-class="{lineUp:sortField === 'univName'}" ng-click="sortFieldClick('univName');" style="cursor: pointer;">소속대학<a ng-class="{up:order === 'asc', down:order === 'desc'}"></a></span></th>
+                            <th><span ng-class="{lineUp:sortField === 'userId'}" ng-click="sortFieldClick('userId');" style="cursor: pointer;">아이디<a ng-class="{up:order === 'asc', down:order === 'desc'}"></a></span></th>
+                            <th><span ng-class="{lineUp:sortField === 'userName'}" ng-click="sortFieldClick('userName');" style="cursor: pointer;">성명<a ng-class="{up:order === 'asc', down:order === 'desc'}"></a></span></th>
+                            <th>계정전환</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr class="nosearchData" ng-if="userList.length === 0">
+                            <td colspan="6">
+                                계정전환 대상자가 없습니다.
+                            </td>
+                        </tr>
+                        <tr ng-repeat="user in userList">
+                            <td>{{user.descRn}}</td>
+                            <td>{{user.userTypeName}}</td>
+                            <td>{{user.univName}}</td>
+                            <td class="_aL">{{user.userId}}</td>
+                            <td>{{user.userName}}</td>
+                            <td><span class="_button _minimum _green"><a style="cursor: pointer" ng-click="changeAccountToUser(user);">계정전환</a></span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div id="changeAccountPaging" class="_paging"></div>
+                </div>
+            </div>
+            <div class="_areaButton">
+                <div class="_center">
+                    <span class="_button _large blackBtn"><a ng-click="closeThisDialog();" style="cursor: pointer;">닫기</a></span>
+                </div>
+            </div>
+        </div><!-- #_articleContent" -->
+    </div>
+</div>

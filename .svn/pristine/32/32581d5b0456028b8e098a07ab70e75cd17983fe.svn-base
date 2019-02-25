@@ -1,0 +1,860 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="exchangeResultMapper">
+
+    <select id="getExchangeResultList" parameterType="map" resultType="umap">
+        /* exchangeResultMapper.getExchangeResultList */
+        <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+        SELECT A.UNIV_CODE
+             , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+             , A.YEAR
+             , A.SEMESTER_CODE
+             , A.SUBJECT_NUM
+             , A.CLASS_NUM
+             , A.USER_UNIV_CODE
+             , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.USER_UNIV_CODE) AS USER_UNIV_CODE_NAME
+             , A.STUDENT_NUMBER
+             , A.USER_SEQ
+             , A.USER_NAME
+             , A.USER_DEPARTMENT
+             , A.STUDENT_GRADE_CODE
+             , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STUDENT_GRADE_CODE) AS STUDENT_GRADE_CODE_NAME
+             , A.SUBJECT_GRADE_CODE
+             , A.COMPLETE_TYPE
+             , A.SUBJECT_NAME
+             , A.SUBJECT_NAME_EN
+             , A.SUBJECT_DEPARTMENT
+             , A.SUBJECT_POINT
+             , A.TEACHER_NAME
+             , A.EXCHANGE_RESULT_SEQ
+             , A.APPLY_RESULT
+             , CASE APPLY_RESULT WHEN 1 THEN '동일'
+                                 WHEN 2 THEN '추가'
+                                 WHEN 3 THEN '변경'
+                    ELSE '삭제' END AS APPLY_RESULT_STATUS
+             , CONVERT(VARCHAR, A.RESULT_REG_DT, 102) AS RESULT_REG_DT
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(isSearchScore)">
+             , A.SCORE
+             , CONVERT(VARCHAR, A.SCORE_REG_DT, 102) AS SCORE_REG_DT
+        </if>
+        <if test="excelType != null and excelType =='upload'">
+             , B.MOU_STUDENT_NUMBER
+        </if>
+          FROM TBL_EXCHANGE_RESULT A
+        <if test="excelType != null and excelType == 'upload'">
+               LEFT OUTER JOIN TBL_MOU_STUDENT_NUMBER B
+                          ON A.UNIV_CODE = B.MOU_UNIV_CODE AND A.USER_UNIV_CODE = B.USER_UNIV_CODE AND A.STUDENT_NUMBER = B.STUDENT_NUMBER
+        </if>
+         WHERE 1 = 1
+        <if test="@org.apache.commons.lang3.StringUtils@isEmpty(isSearchScore)">
+            AND A.APPLY_RESULT IS NOT NULL
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(isSearchScore)">
+            AND A.APPLY_RESULT != 4
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+            AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+            AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUserUniv)">
+            AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUserUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUniv)">
+            AND A.USER_UNIV_CODE = #{searchUserUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchYear)">
+            AND A.YEAR = #{searchYear}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSemesterCode)">
+            AND A.SEMESTER_CODE = #{searchSemesterCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStudentGradeCode)">
+            AND A.STUDENT_GRADE_CODE = #{searchStudentGradeCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKey)">
+            <choose>
+                <when test='searchType == "userUniv"'>
+                    AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%')
+                </when>
+                <when test='searchType == "userDepartment"'>
+                    AND A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "studentNumber"'>
+                    AND A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "userName"'>
+                    AND A.USER_NAME LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "subjectNum"'>
+                    AND A.SUBJECT_NUM LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "subjectName"'>
+                    AND A.SUBJECT_NAME LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <otherwise>
+                    AND (
+                        A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%') OR
+                        A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%' OR
+                        A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%' OR
+                        A.USER_NAME LIKE '%'+ #{searchKey} + '%' OR
+                        A.SUBJECT_NUM LIKE '%'+ #{searchKey} + '%' OR
+                        A.SUBJECT_NAME LIKE '%'+ #{searchKey} + '%'
+                    )
+                </otherwise>
+            </choose>
+        </if>
+        <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+    
+    <select id="getExchangeResultInfo" parameterType="map" resultType="umap">
+        /* exchangeResultMapper.getExchangeResultInfo */
+        SELECT A.UNIV_CODE
+             , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+             , A.YEAR
+             , A.SEMESTER_CODE
+             , A.SUBJECT_NUM
+             , A.CLASS_NUM
+             , A.USER_UNIV_CODE
+             , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.USER_UNIV_CODE) AS USER_UNIV_CODE_NAME
+             , A.STUDENT_NUMBER
+             , A.USER_SEQ
+             , A.USER_NAME
+             , A.USER_DEPARTMENT
+             , A.STUDENT_GRADE_CODE
+             , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STUDENT_GRADE_CODE) AS STUDENT_GRADE_CODE_NAME
+             , A.SUBJECT_GRADE_CODE
+             , A.COMPLETE_TYPE
+             , A.SUBJECT_NAME
+             , A.SUBJECT_NAME_EN
+             , A.SUBJECT_DEPARTMENT
+             , A.SUBJECT_POINT
+             , A.TEACHER_NAME
+             , A.EXCHANGE_RESULT_SEQ
+             , A.APPLY_RESULT
+             , (SELECT USER_NAME FROM TBL_USER WHERE USER_SEQ = A.RESULT_REG_USER_SEQ) AS RESULT_REG_USER_NAME
+             , CONVERT(VARCHAR, A.RESULT_REG_DT, 102) AS RESULT_REG_DT
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(isSearchScore)">
+             , A.SCORE
+             , CONVERT(VARCHAR, A.SCORE_REG_DT, 102) AS SCORE_REG_DT
+             , (SELECT GRADE_NAME
+                  FROM TBL_UNIVERSITY_GRADE X, TBL_UNIVERSITY_INFO Y
+                 WHERE Y.UNIV_CODE = A.UNIV_CODE AND Y.UNIV_CODE = X.UNIV_CODE AND Y.GRADE_TRANCE_TYPE = X.GRADE_TYPE
+                   AND A.SCORE BETWEEN X.SCORE_MIN AND X.SCORE_MAX) AS GRADE_NAME
+        </if>
+             , B.MOU_STUDENT_NUMBER
+          FROM TBL_EXCHANGE_RESULT A
+               LEFT OUTER JOIN TBL_MOU_STUDENT_NUMBER B
+                          ON A.UNIV_CODE = B.MOU_UNIV_CODE AND A.USER_UNIV_CODE = B.USER_UNIV_CODE AND A.STUDENT_NUMBER = B.STUDENT_NUMBER
+         WHERE A.EXCHANGE_RESULT_SEQ = #{exchangeResultSeq}
+    </select>
+    
+    <select id="checkUploadExchangeResultData" parameterType="map" resultType="umap">
+        /* exchangeResultMapper.checkUploadExchangeResultData */
+		SELECT CASE WHEN (SELECT COUNT(*) FROM TBL_UNIVERSITY_INFO WHERE COMMON_CODE = (SELECT COMMON_CODE FROM TBL_UNIV_COM_MAP WHERE UNIV_NAME = #{userUnivName})) > 0 THEN 'Y'
+		            ELSE 'N' END AS IS_UNIV,
+               CASE WHEN (SELECT COUNT(*) FROM TBL_USER
+                           WHERE STUDENT_NUMBER = #{studentNumber}
+                             AND UNIV_CODE = (SELECT UNIV_CODE FROM TBL_UNIVERSITY_INFO WHERE COMMON_CODE = (SELECT COMMON_CODE FROM TBL_UNIV_COM_MAP WHERE UNIV_NAME = #{userUnivName})) ) > 0 THEN 'Y'
+                    ELSE 'N' END AS IS_USER,
+			   CASE WHEN (SELECT COUNT(*) FROM TBL_SEMESTER_SUBJECT
+				           WHERE UNIV_CODE = #{univCode} AND YEAR = #{year} AND SEMESTER_CODE = #{semesterCode}
+				             AND SUBJECT_NUM = #{subjectNum} AND CLASS_NUM = #{classNum}) > 0 THEN 'Y'
+				    ELSE 'N' END AS IS_SUBJ,
+	        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(changeSubjectNum)">
+			   CASE WHEN (SELECT COUNT(*) FROM TBL_SEMESTER_SUBJECT
+				           WHERE UNIV_CODE = #{univCode} AND YEAR = #{year} AND SEMESTER_CODE = #{semesterCode}
+				             AND SUBJECT_NUM = #{changeSubjectNum} AND CLASS_NUM = #{changeClassNum}) > 0 THEN 'Y'
+				    ELSE 'N' END AS IS_CHNG_SUBJ
+            </if>
+            <if test="@org.apache.commons.lang3.StringUtils@isEmpty(changeSubjectNum)">
+               'X' AS IS_CHNG_SUBJ
+            </if>
+    </select>
+    
+    <update id="initExchangeResultList" parameterType="map">
+        /* exchangeResultMapper.initExchangeResultList */
+        DECLARE @UNIV_CODE VARCHAR(11),
+                @YEAR VARCHAR(4),
+                @SEMESTER_CODE VARCHAR(11)
+        SET @UNIV_CODE = #{univCode}
+        SET @SEMESTER_CODE = #{semesterCode}
+        SET @YEAR = #{year}
+
+        BEGIN
+            DELETE FROM TBL_EXCHANGE_RESULT
+                  WHERE UNIV_CODE = @UNIV_CODE
+                    AND YEAR = @YEAR
+                    AND SEMESTER_CODE = @SEMESTER_CODE;
+
+            INSERT INTO TBL_EXCHANGE_RESULT(
+                  UNIV_CODE
+                , YEAR
+                , SEMESTER_CODE
+                , SUBJECT_NUM
+                , CLASS_NUM
+                , USER_UNIV_CODE
+                , STUDENT_NUMBER
+                , USER_SEQ
+                , USER_NAME
+                , COLLEGE_NAME
+                , USER_DEPARTMENT
+                , STUDENT_GRADE_CODE
+                , SUBJECT_GRADE_CODE
+                , COMPLETE_TYPE
+                , SUBJECT_NAME
+                , SUBJECT_DEPARTMENT
+                , SUBJECT_POINT
+                , TEACHER_NAME
+                , APPLY_RESULT
+                , REGIST_SCORE_YN
+                , RESULT_REG_USER_SEQ
+                , RESULT_REG_DT
+            )
+            SELECT UNIV_CODE
+                 , YEAR
+                 , SEMESTER_CODE
+                 , SUBJECT_NUM
+                 , CLASS_NUM
+                 , USER_UNIV_CODE
+                 , STUDENT_NUMBER
+                 , USER_SEQ
+                 , USER_NAME
+                 , COLLEGE_NAME
+                 , USER_DEPARTMENT
+                 , STUDENT_GRADE_CODE
+                 , SUBJECT_GRADE_CODE
+                 , COMPLETE_TYPE
+                 , SUBJECT_NAME
+                 , A.SUBJECT_DEPARTMENT
+                 , A.SUBJECT_POINT
+                 , A.TEACHER_NAME
+                 , 4
+                 , 'N'
+                 , #{modUserSeq}
+                 , GETDATE()
+              FROM TBL_APPLY_EXCHANGE A
+             WHERE A.UNIV_CODE = @UNIV_CODE
+               AND A.YEAR = @YEAR
+               AND A.SEMESTER_CODE = @SEMESTER_CODE
+               AND A.APPLY_STATUS = 5
+               AND (A.APPLY_CANCEL_STATUS IS NULL OR A.APPLY_CANCEL_STATUS = 3);
+        END
+    </update>
+    
+    <update id="upsertExchangeResultInfo" parameterType="map">
+        /* exchangeResultMapper.upsertExchangeResultInfo */
+        DECLARE @UNIV_CODE VARCHAR(11),
+                @YEAR VARCHAR(4),
+                @SEMESTER_CODE VARCHAR(11),
+                @SUBJECT_NUM VARCHAR(50),
+                @CLASS_NUM VARCHAR(50),
+                @USER_UNIV_CODE VARCHAR(11),
+                @STUDENT_NUMBER VARCHAR(50),
+                @CHANGE_SUBJECT_NUM VARCHAR(50),
+                @CHANGE_CLASS_NUM VARCHAR(50),
+                @USER_NAME VARCHAR(100),
+                @USER_GRADE VARCHAR(10),
+                @COMPLETE_TYPE VARCHAR(50),
+                @SUBJECT_NAME VARCHAR(200),
+                @SUBJECT_POINT INTEGER,
+                @MOD_USER_SEQ INTEGER
+        SET @UNIV_CODE = #{univCode}
+        SET @SEMESTER_CODE = #{semesterCode}
+        SET @YEAR = #{year}
+        SET @SUBJECT_NUM = #{subjectNum}
+        SET @CLASS_NUM = #{classNum}
+        SET @USER_UNIV_CODE = (SELECT UNIV_CODE FROM TBL_UNIVERSITY_INFO WHERE COMMON_CODE = (SELECT COMMON_CODE FROM TBL_UNIV_COM_MAP WHERE UNIV_NAME = #{userUnivName}))
+        SET @STUDENT_NUMBER = #{studentNumber}
+        SET @CHANGE_SUBJECT_NUM = #{changeSubjectNum}
+        SET @CHANGE_CLASS_NUM = #{changeClassNum}
+        SET @USER_NAME = #{userName}
+        SET @USER_GRADE = #{userGrade}
+        SET @COMPLETE_TYPE = #{changeCompleteType}
+        SET @SUBJECT_NAME = #{changeSubjectName}
+        SET @SUBJECT_POINT = #{changeSubjectPoint}
+        SET @MOD_USER_SEQ = #{modUserSeq}
+
+        BEGIN
+	        IF NOT EXISTS ( SELECT 1 FROM TBL_EXCHANGE_RESULT
+	                         WHERE UNIV_CODE = @UNIV_CODE
+	                           AND YEAR = @YEAR
+	                           AND SEMESTER_CODE = @SEMESTER_CODE
+	                           AND SUBJECT_NUM = @SUBJECT_NUM
+	                           AND CLASS_NUM = @CLASS_NUM
+	                           AND USER_UNIV_CODE = @USER_UNIV_CODE
+	                           AND STUDENT_NUMBER = @STUDENT_NUMBER )
+                INSERT INTO TBL_EXCHANGE_RESULT (
+                       UNIV_CODE
+                     , YEAR
+                     , SEMESTER_CODE
+                     , SUBJECT_NUM
+                     , CLASS_NUM
+                     , USER_UNIV_CODE
+                     , STUDENT_NUMBER
+                     , USER_SEQ
+                     , USER_NAME
+                     , USER_DEPARTMENT
+                     , STUDENT_GRADE_CODE
+                     , SUBJECT_GRADE_CODE
+                     , COMPLETE_TYPE
+                     , SUBJECT_NAME
+                     , SUBJECT_DEPARTMENT
+                     , SUBJECT_POINT
+                     , TEACHER_NAME
+                     , APPLY_RESULT
+                     , REGIST_SCORE_YN
+                     , RESULT_REG_USER_SEQ
+                     , RESULT_REG_DT
+                )
+                SELECT @UNIV_CODE
+                     , @YEAR
+                     , @SEMESTER_CODE
+                     , @SUBJECT_NUM
+                     , @CLASS_NUM
+                     , @USER_UNIV_CODE
+                     , @STUDENT_NUMBER
+                     , ISNULL((SELECT USER_SEQ           FROM TBL_USER WHERE STUDENT_NUMBER = @STUDENT_NUMBER AND UNIV_CODE = @USER_UNIV_CODE), NULL)
+                     , ISNULL((SELECT USER_NAME          FROM TBL_USER WHERE STUDENT_NUMBER = @STUDENT_NUMBER AND UNIV_CODE = @USER_UNIV_CODE), @USER_NAME)
+                     , ISNULL((SELECT DEPARTMENT         FROM TBL_USER WHERE STUDENT_NUMBER = @STUDENT_NUMBER AND UNIV_CODE = @USER_UNIV_CODE), NULL)
+                     , ISNULL((SELECT STUDENT_GRADE_CODE FROM TBL_USER WHERE STUDENT_NUMBER = @STUDENT_NUMBER AND UNIV_CODE = @USER_UNIV_CODE), (SELECT CODE FROM TBL_CODE WHERE PARENT_CODE = 'SGC00000000' AND CODE_NAME LIKE @USER_GRADE+'%' AND USE_YN = 'Y' AND DEL_YN = 'N'))
+                <if test="@org.apache.commons.lang3.StringUtils@isEmpty(changeSubjectNum)">
+                     , ISNULL((SELECT SUBJECT_GRADE_CODE FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @SUBJECT_NUM AND CLASS_NUM = @CLASS_NUM), NULL)
+                     , ISNULL((SELECT COMPLETE_TYPE      FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @SUBJECT_NUM AND CLASS_NUM = @CLASS_NUM), @COMPLETE_TYPE)
+                     , ISNULL((SELECT SUBJECT_NAME       FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @SUBJECT_NUM AND CLASS_NUM = @CLASS_NUM), @SUBJECT_NAME)
+                     , ISNULL((SELECT DEPARTMENT         FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @SUBJECT_NUM AND CLASS_NUM = @CLASS_NUM), NULL)
+                     , ISNULL((SELECT SUBJECT_POINT      FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @SUBJECT_NUM AND CLASS_NUM = @CLASS_NUM), @SUBJECT_POINT)
+                     , ISNULL((SELECT TEACHER_NAME       FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @SUBJECT_NUM AND CLASS_NUM = @CLASS_NUM), NULL)
+                </if>
+                <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(changeSubjectNum)">
+                     , ISNULL((SELECT SUBJECT_GRADE_CODE FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND CLASS_NUM = @CHANGE_CLASS_NUM), NULL)
+                     , ISNULL((SELECT COMPLETE_TYPE      FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND CLASS_NUM = @CHANGE_CLASS_NUM), @COMPLETE_TYPE)
+                     , ISNULL((SELECT SUBJECT_NAME       FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND CLASS_NUM = @CHANGE_CLASS_NUM), @SUBJECT_NAME)
+                     , ISNULL((SELECT DEPARTMENT         FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND CLASS_NUM = @CHANGE_CLASS_NUM), NULL)
+                     , ISNULL((SELECT SUBJECT_POINT      FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND CLASS_NUM = @CHANGE_CLASS_NUM), @SUBJECT_POINT)
+                     , ISNULL((SELECT TEACHER_NAME       FROM TBL_SEMESTER_SUBJECT WHERE UNIV_CODE = @UNIV_CODE AND YEAR = @YEAR AND SEMESTER_CODE = @SEMESTER_CODE AND SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND CLASS_NUM = @CHANGE_CLASS_NUM), NULL)
+                </if>
+                     , 2
+                     , 'N'
+                     , @MOD_USER_SEQ
+                     , GETDATE()
+	        ELSE 
+                UPDATE TBL_EXCHANGE_RESULT
+                   SET
+                       RESULT_REG_USER_SEQ = @MOD_USER_SEQ
+                     , RESULT_REG_DT = GETDATE()
+                     , REGIST_SCORE_YN = 'N'
+                    <if test="@org.apache.commons.lang3.StringUtils@isEmpty(changeSubjectNum)">
+                        , APPLY_RESULT = 1
+                    </if>
+                    <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(changeSubjectNum)">
+                        , SUBJECT_NUM = @CHANGE_SUBJECT_NUM
+                        , CLASS_NUM = @CHANGE_CLASS_NUM
+                        , APPLY_RESULT = 3
+                        , SUBJECT_GRADE_CODE = ISNULL((SELECT SUBJECT_GRADE_CODE FROM TBL_SEMESTER_SUBJECT A WHERE A.UNIV_CODE = @UNIV_CODE AND A.YEAR = @YEAR AND A.SEMESTER_CODE = @SEMESTER_CODE AND A.SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND A.CLASS_NUM = @CHANGE_CLASS_NUM), NULL)
+                        , COMPLETE_TYPE = ISNULL((SELECT COMPLETE_TYPE FROM TBL_SEMESTER_SUBJECT A WHERE A.UNIV_CODE = @UNIV_CODE AND A.YEAR = @YEAR AND A.SEMESTER_CODE = @SEMESTER_CODE AND A.SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND A.CLASS_NUM = @CHANGE_CLASS_NUM), @COMPLETE_TYPE)
+                        , SUBJECT_NAME = ISNULL((SELECT SUBJECT_NAME FROM TBL_SEMESTER_SUBJECT A WHERE A.UNIV_CODE = @UNIV_CODE AND A.YEAR = @YEAR AND A.SEMESTER_CODE = @SEMESTER_CODE AND A.SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND A.CLASS_NUM = @CHANGE_CLASS_NUM), @SUBJECT_NAME)
+                        , SUBJECT_DEPARTMENT = ISNULL((SELECT DEPARTMENT FROM TBL_SEMESTER_SUBJECT A WHERE A.UNIV_CODE = @UNIV_CODE AND A.YEAR = @YEAR AND A.SEMESTER_CODE = @SEMESTER_CODE AND A.SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND A.CLASS_NUM = @CHANGE_CLASS_NUM), NULL)
+                        , SUBJECT_POINT = ISNULL((SELECT SUBJECT_POINT FROM TBL_SEMESTER_SUBJECT A WHERE A.UNIV_CODE = @UNIV_CODE AND A.YEAR = @YEAR AND A.SEMESTER_CODE = @SEMESTER_CODE AND A.SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND A.CLASS_NUM = @CHANGE_CLASS_NUM), @SUBJECT_POINT)
+                        , TEACHER_NAME = ISNULL((SELECT TEACHER_NAME FROM TBL_SEMESTER_SUBJECT A WHERE A.UNIV_CODE = @UNIV_CODE AND A.YEAR = @YEAR AND A.SEMESTER_CODE = @SEMESTER_CODE AND A.SUBJECT_NUM = @CHANGE_SUBJECT_NUM AND A.CLASS_NUM = @CHANGE_CLASS_NUM), NULL)
+                    </if>
+                WHERE UNIV_CODE = @UNIV_CODE
+                  AND YEAR = @YEAR
+                  AND SEMESTER_CODE = @SEMESTER_CODE
+                  AND SUBJECT_NUM = @SUBJECT_NUM
+                  AND CLASS_NUM = @CLASS_NUM
+                  AND USER_UNIV_CODE = @USER_UNIV_CODE
+                  AND STUDENT_NUMBER = @STUDENT_NUMBER
+        END
+    </update>
+    
+    <select id="getStudentOutList" parameterType="map" resultType="umap">
+    	/* exchangeResultMapper.getStudentOutList */
+        <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+	    SELECT DISTINCT
+			  A.USER_NAME
+			, A.USER_UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.USER_UNIV_CODE) AS USER_UNIV_CODE_NAME
+			, A.YEAR
+			, A.SEMESTER_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SEMESTER_CODE) AS SEMESTER_CODE_NAME
+			, A.USER_DEPARTMENT
+			, A.STUDENT_GRADE_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STUDENT_GRADE_CODE) AS STUDENT_GRADE_CODE_NAME
+			, A.STUDENT_NUMBER
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, A.SUBJECT_NUM
+			, A.SUBJECT_NAME
+			, A.SUBJECT_POINT
+			, A.CLASS_NUM
+			, B.MOU_STUDENT_NUMBER
+			, CONVERT(VARCHAR, A.RESULT_REG_DT, 102) AS REG_DT
+			, CONVERT(VARCHAR, A.RESULT_REG_DT, 102) AS RESULT_REG_DT
+		FROM TBL_EXCHANGE_RESULT A
+             LEFT OUTER JOIN TBL_MOU_STUDENT_NUMBER B
+                          ON A.UNIV_CODE = B.MOU_UNIV_CODE AND A.USER_UNIV_CODE = B.USER_UNIV_CODE AND A.STUDENT_NUMBER = B.STUDENT_NUMBER
+		WHERE A.REGIST_SCORE_YN = 'Y'
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+            AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+            AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUserUniv)">
+            AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUserUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUniv)">
+            AND A.USER_UNIV_CODE = #{searchUserUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchYear)">
+            AND A.YEAR = #{searchYear}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSemesterCode)">
+            AND A.SEMESTER_CODE = #{searchSemesterCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStudentGradeCode)">
+            AND A.STUDENT_GRADE_CODE = #{searchStudentGradeCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKey)">
+            <choose>
+                <when test='searchType == "userUniv"'>
+                    AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%')
+                </when>
+                <when test='searchType == "userDepartment"'>
+                    AND A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "studentNumber"'>
+                    AND A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "userName"'>
+                    AND A.USER_NAME LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "subjectNum"'>
+                    AND A.SUBJECT_NUM LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "subjectName"'>
+                    AND A.SUBJECT_NAME LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <otherwise>
+                    AND (
+                        A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%') OR
+                        A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%' OR
+                        A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%' OR
+                        A.USER_NAME LIKE '%'+ #{searchKey} + '%' OR
+                        A.SUBJECT_NUM LIKE '%'+ #{searchKey} + '%' OR
+                        A.SUBJECT_NAME LIKE '%'+ #{searchKey} + '%'
+                    )
+                </otherwise>
+            </choose>
+        </if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+    
+    <select id="getStudentInList" parameterType="map" resultType="umap">
+    	/* exchangeResultMapper.getStudentInList */
+        <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+	    SELECT DISTINCT
+			  A.USER_NAME
+			, A.USER_UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.USER_UNIV_CODE) AS USER_UNIV_CODE_NAME
+			, A.YEAR
+			, A.SEMESTER_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.SEMESTER_CODE) AS SEMESTER_CODE_NAME
+			, A.USER_DEPARTMENT
+			, A.STUDENT_GRADE_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STUDENT_GRADE_CODE) AS STUDENT_GRADE_CODE_NAME
+			, A.STUDENT_NUMBER
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+			, A.SUBJECT_NUM
+			, A.SUBJECT_NAME
+			, A.SUBJECT_POINT
+			, A.CLASS_NUM
+			, B.MOU_STUDENT_NUMBER
+			, CONVERT(VARCHAR, A.RESULT_REG_DT, 102) AS AP_COFM_DT
+			, CONVERT(VARCHAR, A.SCORE_REG_DT, 102) AS SCORE_REG_DT
+			, A.APPLY_RESULT
+			, CASE APPLY_RESULT WHEN 1 THEN '동일'
+                                WHEN 2 THEN '추가'
+                                WHEN 3 THEN '변경'
+              					ELSE '삭제' END AS APPLY_RESULT_STATUS
+		FROM TBL_EXCHANGE_RESULT A
+             LEFT OUTER JOIN TBL_MOU_STUDENT_NUMBER B
+                          ON A.UNIV_CODE = B.MOU_UNIV_CODE AND A.USER_UNIV_CODE = B.USER_UNIV_CODE AND A.STUDENT_NUMBER = B.STUDENT_NUMBER
+		WHERE A.REGIST_SCORE_YN = 'Y'
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+            AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+            AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUserUniv)">
+            AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUserUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUniv)">
+            AND A.USER_UNIV_CODE = #{searchUserUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchYear)">
+            AND A.YEAR = #{searchYear}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSemesterCode)">
+            AND A.SEMESTER_CODE = #{searchSemesterCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStudentGradeCode)">
+            AND A.STUDENT_GRADE_CODE = #{searchStudentGradeCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKey)">
+            <choose>
+                <when test='searchType == "userUniv"'>
+                    AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%')
+                </when>
+                <when test='searchType == "userDepartment"'>
+                    AND A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "studentNumber"'>
+                    AND A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "userName"'>
+                    AND A.USER_NAME LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "subjectNum"'>
+                    AND A.SUBJECT_NUM LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "subjectName"'>
+                    AND A.SUBJECT_NAME LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <otherwise>
+                    AND (
+                        A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%') OR
+                        A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%' OR
+                        A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%' OR
+                        A.USER_NAME LIKE '%'+ #{searchKey} + '%' OR
+                        A.SUBJECT_NUM LIKE '%'+ #{searchKey} + '%' OR
+                        A.SUBJECT_NAME LIKE '%'+ #{searchKey} + '%'
+                    )
+                </otherwise>
+            </choose>
+        </if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+    
+    <update id="saveScore" parameterType="map">
+        /* exchangeResultMapper.saveScore */
+        UPDATE TBL_EXCHANGE_RESULT
+           SET
+               SCORE_REG_USER_SEQ = #{scoreRegUserSeq}
+             , SCORE_REG_DT = GETDATE()
+             , SCORE = #{score}
+             , REGIST_SCORE_YN = 'Y'
+         WHERE UNIV_CODE = #{univCode}
+           AND YEAR = #{year}
+           AND SEMESTER_CODE = #{semesterCode}
+           AND SUBJECT_NUM = #{subjectNum}
+           AND CLASS_NUM = #{classNum}
+           AND USER_UNIV_CODE = #{userUnivCode}
+           AND STUDENT_NUMBER = #{studentNumber}
+    </update>
+    
+    <update id="upsertScore" parameterType="map">
+        /* exchangeResultMapper.upsertScore */
+        DECLARE @UNIV_CODE VARCHAR(11),
+                @YEAR VARCHAR(4),
+                @SEMESTER_CODE VARCHAR(11),
+                @SUBJECT_NUM VARCHAR(50),
+                @CLASS_NUM VARCHAR(50),
+                @USER_UNIV_CODE VARCHAR(11),
+                @STUDENT_NUMBER VARCHAR(50),
+                @MOU_STUDENT_NUMBER VARCHAR(50),
+                @SCORE VARCHAR(10),
+                @USER_NAME VARCHAR(100),
+                @USER_GRADE VARCHAR(10),
+                @COMPLETE_TYPE VARCHAR(50),
+                @SUBJECT_NAME VARCHAR(200),
+                @SUBJECT_NAME_EN VARCHAR(200),
+                @SUBJECT_POINT INTEGER,
+                @SCORE_REG_USER_SEQ INTEGER
+        SET @UNIV_CODE = #{univCode}
+        SET @SEMESTER_CODE = #{semesterCode}
+        SET @YEAR = #{year}
+        SET @SUBJECT_NUM = #{subjectNum}
+        SET @CLASS_NUM = #{classNum}
+        SET @USER_UNIV_CODE = (SELECT UNIV_CODE FROM TBL_UNIVERSITY_INFO WHERE COMMON_CODE = (SELECT COMMON_CODE FROM TBL_UNIV_COM_MAP WHERE UNIV_NAME = #{userUnivName}))
+        SET @STUDENT_NUMBER = #{studentNumber}
+        SET @MOU_STUDENT_NUMBER = #{mouStudentNumber}
+        SET @SCORE = #{score}
+        SET @USER_NAME = #{userName}
+        SET @USER_GRADE = #{userGrade}
+        SET @COMPLETE_TYPE = #{completeType}
+        SET @SUBJECT_NAME = #{subjectName}
+        SET @SUBJECT_NAME_EN = #{subjectNameEn}
+        SET @SUBJECT_POINT = #{subjectPoint}
+        SET @SCORE_REG_USER_SEQ = #{scoreRegUserSeq}
+
+        BEGIN
+	        IF NOT EXISTS ( SELECT 1 FROM TBL_EXCHANGE_RESULT
+	                         WHERE UNIV_CODE = @UNIV_CODE
+	                           AND YEAR = @YEAR
+	                           AND SEMESTER_CODE = @SEMESTER_CODE
+	                           AND SUBJECT_NUM = @SUBJECT_NUM
+	                           AND CLASS_NUM = @CLASS_NUM
+	                           AND USER_UNIV_CODE = @USER_UNIV_CODE
+	                           AND STUDENT_NUMBER = @STUDENT_NUMBER )
+	            IF NOT EXISTS ( SELECT 1 FROM TBL_SEMESTER_SUBJECT
+	                             WHERE UNIV_CODE = @UNIV_CODE
+	                               AND YEAR = @YEAR
+	                               AND SEMESTER_CODE = @SEMESTER_CODE
+	                               AND SUBJECT_NUM = @SUBJECT_NUM
+	                               AND CLASS_NUM = @CLASS_NUM )
+		            INSERT INTO TBL_EXCHANGE_RESULT (
+		                  UNIV_CODE
+		                , YEAR
+		                , SEMESTER_CODE
+		                , SUBJECT_NUM
+		                , CLASS_NUM
+		                , USER_UNIV_CODE
+		                , STUDENT_NUMBER
+		                , USER_NAME
+		                , STUDENT_GRADE_CODE
+		                , COMPLETE_TYPE
+		                , SUBJECT_NAME
+		                , SUBJECT_NAME_EN
+		                , SUBJECT_POINT
+		                , REGIST_SCORE_YN
+		                , SCORE
+		                , SCORE_REG_USER_SEQ
+		                , SCORE_REG_DT
+		            )
+		            SELECT @UNIV_CODE
+		                 , @YEAR
+		                 , @SEMESTER_CODE
+		                 , @SUBJECT_NUM
+		                 , @CLASS_NUM
+		                 , @USER_UNIV_CODE
+		                 , @STUDENT_NUMBER
+		                 , @USER_NAME
+		                 , (SELECT CODE FROM TBL_CODE WHERE PARENT_CODE = 'SGC00000000' AND CODE_NAME LIKE @USER_GRADE+'%' AND USE_YN = 'Y' AND DEL_YN = 'N')
+		                 , @COMPLETE_TYPE
+		                 , @SUBJECT_NAME
+		                 , @SUBJECT_NAME_EN
+		                 , @SUBJECT_POINT
+		                 , 'Y'
+		                 , @SCORE
+		                 , @SCORE_REG_USER_SEQ
+		                 , GETDATE();
+	            ELSE
+                    INSERT INTO TBL_EXCHANGE_RESULT (
+                          UNIV_CODE
+                        , YEAR
+                        , SEMESTER_CODE
+                        , SUBJECT_NUM
+                        , CLASS_NUM
+                        , USER_UNIV_CODE
+                        , STUDENT_NUMBER
+                        , USER_SEQ
+                        , USER_NAME
+                        , USER_DEPARTMENT
+                        , STUDENT_GRADE_CODE
+                        , SUBJECT_GRADE_CODE
+                        , COMPLETE_TYPE
+                        , SUBJECT_NAME
+                        , SUBJECT_NAME_EN
+                        , SUBJECT_DEPARTMENT
+                        , SUBJECT_POINT
+                        , TEACHER_NAME
+                        , REGIST_SCORE_YN
+                        , SCORE
+                        , SCORE_REG_USER_SEQ
+                        , SCORE_REG_DT
+                    )
+                    SELECT @UNIV_CODE
+                         , @YEAR
+                         , @SEMESTER_CODE
+                         , @SUBJECT_NUM
+                         , @CLASS_NUM
+                         , @USER_UNIV_CODE
+                         , @STUDENT_NUMBER
+                         , B.USER_SEQ
+                         , ISNULL(B.USER_NAME, @USER_NAME)
+                         , B.DEPARTMENT
+                         , ISNULL(B.STUDENT_GRADE_CODE, (SELECT CODE FROM TBL_CODE WHERE PARENT_CODE = 'SGC00000000' AND CODE_NAME LIKE @USER_GRADE+'%'))
+                         , A.SUBJECT_GRADE_CODE
+                         , A.COMPLETE_TYPE
+                         , A.SUBJECT_NAME
+                         , @SUBJECT_NAME_EN
+                         , A.DEPARTMENT
+                         , A.SUBJECT_POINT
+                         , A.TEACHER_NAME
+                         , 'Y'
+                         , @SCORE
+                         , @SCORE_REG_USER_SEQ
+                         , GETDATE()
+                      FROM TBL_SEMESTER_SUBJECT A
+                           LEFT OUTER JOIN TBL_USER B ON B.STUDENT_NUMBER = @STUDENT_NUMBER AND B.UNIV_CODE = @USER_UNIV_CODE
+                     WHERE A.UNIV_CODE = @UNIV_CODE
+                       AND A.YEAR = @YEAR
+                       AND A.SEMESTER_CODE = @SEMESTER_CODE
+                       AND A.SUBJECT_NUM = @SUBJECT_NUM
+                       AND A.CLASS_NUM = @CLASS_NUM;
+	        ELSE
+		        UPDATE TBL_EXCHANGE_RESULT
+		           SET
+		               SCORE_REG_USER_SEQ = @SCORE_REG_USER_SEQ
+		             , SCORE_REG_DT = GETDATE()
+	                 , SCORE = @SCORE
+	                 , REGIST_SCORE_YN = 'Y'
+		             , SUBJECT_NAME_EN = @SUBJECT_NAME_EN
+		         WHERE UNIV_CODE = @UNIV_CODE
+		           AND YEAR = @YEAR
+		           AND SEMESTER_CODE = @SEMESTER_CODE
+		           AND SUBJECT_NUM = @SUBJECT_NUM
+		           AND CLASS_NUM = @CLASS_NUM
+		           AND USER_UNIV_CODE = @USER_UNIV_CODE
+		           AND STUDENT_NUMBER = @STUDENT_NUMBER;
+	
+	        IF NOT EXISTS ( SELECT 1 FROM TBL_MOU_STUDENT_NUMBER
+	                         WHERE MOU_UNIV_CODE = @UNIV_CODE
+	                           AND USER_UNIV_CODE = @USER_UNIV_CODE
+	                           AND STUDENT_NUMBER = @STUDENT_NUMBER )
+	            INSERT INTO TBL_MOU_STUDENT_NUMBER
+	                (MOU_UNIV_CODE, USER_UNIV_CODE, STUDENT_NUMBER, MOU_STUDENT_NUMBER)
+	            VALUES
+	                (@UNIV_CODE, @USER_UNIV_CODE, @STUDENT_NUMBER, @MOU_STUDENT_NUMBER);
+	        ELSE
+	            SELECT COUNT(*) FROM TBL_MOU_STUDENT_NUMBER
+                 WHERE MOU_UNIV_CODE = @UNIV_CODE AND USER_UNIV_CODE = @USER_UNIV_CODE AND STUDENT_NUMBER = @STUDENT_NUMBER;
+        END
+    </update>
+
+    <select id="getResultScoreList" parameterType="map" resultType="umap">
+        /* exchangeResultMapper.getResultScoreList */
+        <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+        SELECT A.UNIV_CODE
+             , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_CODE_NAME
+             , A.YEAR
+             , A.SEMESTER_CODE
+             , A.SUBJECT_NUM
+             , A.CLASS_NUM
+             , A.USER_UNIV_CODE
+             , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.USER_UNIV_CODE) AS USER_UNIV_CODE_NAME
+             , A.STUDENT_NUMBER
+             , A.USER_SEQ
+             , A.USER_NAME
+             , A.USER_DEPARTMENT
+             , A.STUDENT_GRADE_CODE
+             , (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STUDENT_GRADE_CODE) AS STUDENT_GRADE_CODE_NAME
+             , A.COMPLETE_TYPE
+             , A.SUBJECT_NAME
+             , A.SUBJECT_NAME_EN
+             , A.SUBJECT_DEPARTMENT
+             , A.SUBJECT_POINT
+             , A.TEACHER_NAME
+             , A.EXCHANGE_RESULT_SEQ
+             , A.APPLY_RESULT
+             , CASE APPLY_RESULT WHEN 1 THEN '동일'
+                                 WHEN 2 THEN '추가'
+                                 WHEN 3 THEN '변경'
+                    ELSE '삭제' END AS APPLY_RESULT_STATUS
+             , CONVERT(VARCHAR, A.RESULT_REG_DT, 102) AS RESULT_REG_DT
+             , A.SCORE
+             , CONVERT(VARCHAR, A.SCORE_REG_DT, 102) AS SCORE_REG_DT
+             , A.GRADE
+             , (SELECT MIN(GRADE_NAME)
+                  FROM TBL_UNIVERSITY_GRADE X, TBL_UNIVERSITY_INFO Y
+                 WHERE Y.UNIV_CODE = A.USER_UNIV_CODE AND Y.UNIV_CODE = X.UNIV_CODE AND Y.GRADE_TRANCE_TYPE = X.GRADE_TYPE
+                   AND CAST(A.SCORE AS NUMERIC) BETWEEN X.SCORE_MIN AND X.SCORE_MAX) AS GRADE_NAME
+          FROM TBL_EXCHANGE_RESULT A
+         WHERE A.REGIST_SCORE_YN = 'Y'
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+            AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+            AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUserUniv)">
+            AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND PARENT_CODE = #{searchUserUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserUniv)">
+            AND A.USER_UNIV_CODE = #{searchUserUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchYear)">
+            AND A.YEAR = #{searchYear}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchSemesterCode)">
+            AND A.SEMESTER_CODE = #{searchSemesterCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStudentGradeCode)">
+            AND A.STUDENT_GRADE_CODE = #{searchStudentGradeCode}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStudentNumber)">
+            AND A.STUDENT_NUMBER = #{searchStudentNumber}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKey)">
+            <choose>
+                <when test='searchType == "userUniv"'>
+                    AND A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%')
+                </when>
+                <when test='searchType == "userDepartment"'>
+                    AND A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "studentNumber"'>
+                    AND A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "userName"'>
+                    AND A.USER_NAME LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "subjectNum"'>
+                    AND A.SUBJECT_NUM LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <when test='searchType == "subjectName"'>
+                    AND A.SUBJECT_NAME LIKE '%'+ #{searchKey} + '%'
+                </when>
+                <otherwise>
+                    AND (
+                        A.USER_UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE LIKE 'UNI02%' AND CODE_NAME LIKE '%' + #{searchKey} + '%') OR
+                        A.USER_DEPARTMENT LIKE '%'+ #{searchKey} + '%' OR
+                        A.STUDENT_NUMBER LIKE '%'+ #{searchKey} + '%' OR
+                        A.USER_NAME LIKE '%'+ #{searchKey} + '%' OR
+                        A.SUBJECT_NUM LIKE '%'+ #{searchKey} + '%' OR
+                        A.SUBJECT_NAME LIKE '%'+ #{searchKey} + '%'
+                    )
+                </otherwise>
+            </choose>
+        </if>
+        <include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+
+    <select id="getGradeTranceList" parameterType="map" resultType="umap">
+        /* exchangeResultMapper.getGradeTranceList */
+        SELECT A.UNIV_CODE
+             , A.GRADE_TYPE
+             , A.GRADE_NAME
+             , A.SCORE_MIN
+             , A.SCORE_MAX
+          FROM TBL_UNIVERSITY_GRADE A
+         WHERE A.UNIV_CODE = #{univCode}
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(gradeType)">
+            AND A.GRADE_TYPE = #{gradeType}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchGradeType)">
+            AND A.GRADE_TYPE = (SELECT GRADE_TRANCE_TYPE FROM TBL_UNIVERSITY_INFO WHERE UNIV_CODE = #{univCode})
+        </if>
+    </select>
+
+    <delete id="deleteGradeTraceAll" parameterType="map">
+        /* exchangeResultMapper.deleteGradeTraceAll */
+        DELETE FROM TBL_UNIVERSITY_GRADE
+         WHERE UNIV_CODE = #{univCode}
+    </delete>
+
+    <insert id="insertGradeTranceInfo" parameterType="map">
+        /* exchangeResultMapper.insertGradeTranceInfo */
+        INSERT INTO TBL_UNIVERSITY_GRADE
+            (UNIV_CODE, GRADE_TYPE, GRADE_NAME, SCORE_MIN, SCORE_MAX)
+        VALUES
+            (#{univCode}, #{gradeType}, #{gradeName}, #{scoreMin}, #{scoreMax})
+    </insert>
+ 	
+</mapper>

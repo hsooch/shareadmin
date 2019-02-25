@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="scheduleMapper">
+    
+    <select id="getScheduleId" parameterType="map" resultType="java.lang.String">
+    	/* scheduleMapper.getScheduleId */
+    	SELECT
+			TOP 1 SCHEDULE_ID
+		FROM TBL_SCHEDULE_ROUND
+    	WHERE CONVERT(CHAR(8), SCHEDULE_DATE, 112) = CONVERT(CHAR(8), GETDATE(), 112)
+    </select>
+    
+    <update id="insertSchedule" parameterType="java.lang.String">
+    	/* scheduleMapper.insertSchedule */
+    	INSERT INTO TBL_SCHEDULE_ROUND (
+    		  SCHEDULE_ID
+    		, SCHEDULE_DATE
+   		)
+    	VALUES (
+    		  #{scheduleId}
+    		, GETDATE()
+   		)
+    </update>
+    
+    <delete id="deleteSchedule" parameterType="map">
+    	/* scheduleMapper.deleteSchedule */
+    	DELETE FROM TBL_SCHEDULE_ROUND WHERE 1=1
+    </delete>
+    
+</mapper>

@@ -1,0 +1,51 @@
+<div style="display:none; background-color:#bbb;">
+	<h1 style="float:left;">비밀번호 변경</h1>
+	<a style="float:right;" href="javascript:void(0);" ng-click="closeLayerPopup()">[X]</a>
+</div>
+<div id="_wrap" class="password_insert">
+	<div id="_articleContent">
+		<div class="_insert">
+			<div class="passwordWrap">
+				<div>
+					<p class="passHeader">안전한 개인정보 보호를 위해<br>
+						<span class="red_txt1">비밀번호를 변경해 주세요.</span> 
+					</p>
+				</div>
+				<div class="passContent">
+					<div class="passTabWrap">
+						<table class="passTable">
+							<colgroup>
+								<col style="width:50%;">
+								<col style="width:auto;">
+							</colgroup>
+							<tbody>
+								<tr>
+									<th>현재 비밀번호</th>
+									<td><input kr-input type="password" ng-model="oldUserPwd" maxlength="15" placeholder="" class="w100"></td>
+								</tr>
+								<tr>
+									<th>새 비밀번호</th>
+									<td><input kr-input type="password" ng-model="userPwd" maxlength="15" placeholder="" class="w100"></td>
+								</tr>
+								<tr>
+									<th>새 비밀번호 재입력</th>
+									<td><input kr-input type="password" ng-model="confirmUserPwd" maxlength="15" placeholder="" class="w100"></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="_areaButton">
+					<div class="_center">
+						<span class="_button _large blackBtn"><a href="javascript:void(0);" ng-click="updateUserPwd();">비밀번호 변경</a></span>
+						<span class="_button _large borderBtn"><a href="javascript:void(0);" ng-click="pwdChangeHold();">취소</a></span>
+					</div>
+				</div>
+				<div class="passBottom">
+					<p>* 비밀번호는 10~15자의 영문, 숫자, 특수문자를 조합하여 설정  해주세요.</p>
+					<p>* 안전을 위해 자주 사용했거나 쉬운 비밀번호가 아닌 새 비밀번호를  등록하고 주기적으로 변경해주세요.</p>
+				</div>
+			</div>
+		</div><!-- #_articleContent" -->
+	</div>
+</div>

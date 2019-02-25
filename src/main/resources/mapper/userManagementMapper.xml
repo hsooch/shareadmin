@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="userManagementMapper">
+
+    <select id="selectUserList" parameterType="map" resultType="UserVO">
+    	/* userManagementMapper.selectUserList */
+    	<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingTop" />
+    	SELECT 
+    		  A.USER_SEQ
+ 			, A.USER_ID
+			, A.USER_NAME
+			, A.USER_EMAIL
+			, A.USER_PIN
+			, A.REG_DT
+			, A.MOD_DT
+			, A.MOD_USER_SEQ
+			, B.INDVDLINFO_AGREDE
+			, A.USER_TYPE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = A.USER_TYPE) AS USER_TYPE_NAME
+			, A.CONFM_YN
+			, A.CONFM_DT
+			, A.CONFM_USER_SEQ
+			, A.LAST_LOGINDE
+			, A.SITE_ID
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE CODE = A.UNIV_CODE) AS UNIV_NAME
+			, A.DEPARTMENT
+			, A.BIRTHDAY
+			, A.TEL_NO
+			, A.CELL_NO
+			, A.SERVICE_GROUP_SEQ
+			, A.STATUS_CODE AS USER_STATUS_CD
+			<choose>
+				<when test='searchPageType == "withdraw"'>
+			, CASE
+				WHEN (A.CONFM_YN = 'Y' AND A.STATUS_CODE IS NOT NULL AND B.WITHDRAW_REJECT_REASON IS NOT NULL) THEN '반려'
+				ELSE '대기'
+				 END USER_STATUS_NAME
+			, CONVERT(
+				  VARCHAR
+				  , CASE
+						WHEN (A.CONFM_YN = 'Y' AND A.STATUS_CODE IS NOT NULL AND B.WITHDRAW_REJECT_REASON IS NOT NULL) THEN B.WITHDRAW_DT
+						ELSE B.WITHDRAW_REQ_DT
+				 		END<!--  탈퇴 신청일 -->
+				, 23) AS USER_STATUS_DT <!-- 회원 상태 변경 날짜 -->
+				</when>
+				<otherwise>
+			, CASE
+				WHEN A.STATUS_CODE = 'UST01000004' THEN (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STATUS_CODE)
+				WHEN A.STATUS_CODE = 'UST01000003' THEN (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STATUS_CODE)
+				WHEN A.STATUS_CODE = 'UST01000002' THEN (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STATUS_CODE)
+				WHEN A.STATUS_CODE = 'UST01000001' THEN (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.STATUS_CODE)
+				WHEN (A.CONFM_YN = 'N' AND (A.STATUS_CODE IS NULL OR A.STATUS_CODE = 'UST01000005') AND B.ACCOUNT_REJECT_REASON IS NOT NULL) THEN '반려'
+				ELSE '대기'
+				 END USER_STATUS_NAME
+			, CONVERT(
+				  VARCHAR
+				, CASE
+					WHEN A.STATUS_CODE = 'UST01000004' THEN B.INACTIVE_DT <!-- 휴면일 -->
+					WHEN A.STATUS_CODE = 'UST01000003' THEN B.WITHDRAW_DT <!-- 강제탈퇴일 -->
+					WHEN A.STATUS_CODE = 'UST01000002' THEN B.WITHDRAW_DT <!-- 탈퇴일 -->
+					WHEN (A.STATUS_CODE = 'UST01000001' AND A.CONFM_YN = 'Y' AND B.WITHDRAW_REQ_DT IS NOT NULL) THEN B.WITHDRAW_REQ_DT <!-- 탈퇴 신청일 -->
+					WHEN (A.CONFM_YN = 'N' AND (A.STATUS_CODE IS NULL OR A.STATUS_CODE = 'UST01000005')) THEN A.REG_DT <!-- 가입 신청일 -->
+					ELSE A.CONFM_DT END
+				, 102) AS USER_STATUS_DT <!-- 회원 상태 변경 날짜 -->
+				</otherwise>
+			</choose>
+			, B.WITHDRAW_REASON
+			, B.WITHDRAW_REJECT_REASON
+			, B.WITHDRAW_DT
+			, B.WITHDRAW_REQ_DT
+			, B.ACCOUNT_REJECT_REASON
+			, B.INACTIVE_DT
+			, A.MF_TYPE
+			, A.STUDENT_NUMBER
+		FROM TBL_USER A
+		LEFT JOIN TBL_USER_DETAIL B ON A.USER_SEQ = B.USER_SEQ
+		WHERE 1=1
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchPageType)">
+			<choose>
+				<when test='searchPageType == "basic"'>
+					AND A.CONFM_YN = 'Y'
+				</when>
+				<when test='searchPageType == "account"'>
+					AND A.CONFM_YN = 'N'
+					AND A.STATUS_CODE = 'UST01000005'
+				</when>
+				<when test='searchPageType == "withdraw"'>
+					AND A.CONFM_YN = 'Y'
+					AND (A.STATUS_CODE = 'UST01000001' OR A.STATUS_CODE = 'UST01000004') 
+					AND B.WITHDRAW_REQ_DT IS NOT NULL
+				</when>
+				<otherwise>
+					AND A.CONFM_YN = 'Y'
+				</otherwise>
+			</choose>
+		</if>
+		<if test="@org.apache.commons.lang3.StringUtils@isEmpty(searchPageType)">
+			AND A.CONFM_YN = 'Y'
+		</if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserType)">
+       		AND A.USER_TYPE = #{searchUserType}
+        </if>
+        <if test="userTypeArr != null">
+        	<foreach item="userType" collection="userTypeArr" open="AND A.USER_TYPE IN (" close=")" separator=",">
+	    		#{userType}
+	    	</foreach>
+        </if>
+		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUserStatus)">
+			<choose>
+				<when test='searchPageType == "account"'>
+					<if test='searchUserStatus == "Y"'>
+						AND B.ACCOUNT_REJECT_REASON IS NOT NULL
+					</if>
+					<if test='searchUserStatus == "N"'>
+						AND B.ACCOUNT_REJECT_REASON IS NULL
+					</if>
+					
+				</when>
+				<when test='searchPageType == "withdraw"'>
+					<if test='searchUserStatus == "Y"'>
+						AND B.WITHDRAW_REJECT_REASON IS NOT NULL
+					</if>
+					<if test='searchUserStatus == "N"'>
+						AND B.WITHDRAW_REJECT_REASON IS NULL
+					</if>
+				</when>
+				<otherwise>
+					AND A.STATUS_CODE = #{searchUserStatus}
+				</otherwise>
+			</choose>
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUnivArea) and @org.apache.commons.lang3.StringUtils@isEmpty(searchUniv)">
+        	AND A.UNIV_CODE IN (SELECT CODE FROM TBL_CODE WHERE PARENT_CODE = #{searchUnivArea} )
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchUniv)">
+        	AND A.UNIV_CODE = #{searchUniv}
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchKey)">
+        	<choose>
+        		<when test='searchKeyType == "userId"'>
+        			AND A.USER_ID LIKE '%' + #{searchKey} + '%'
+        		</when>
+        		<when test='searchKeyType == "userName"'>
+        			AND A.USER_NAME LIKE '%'+ #{searchKey} + '%'
+        		</when>
+        		<when test='searchKeyType == "userEmail"'>
+        			AND A.USER_EMAIL LIKE '%'+ #{searchKey} + '%'
+        		</when>
+				<when test='searchKeyType == "idAndName"'>
+					AND (
+						A.USER_ID LIKE '%' + #{searchKey} + '%' OR
+						A.USER_NAME LIKE '%'+ #{searchKey} + '%'
+					)
+				</when>
+        		<otherwise>
+        			AND (
+        				A.USER_ID LIKE '%' + #{searchKey} + '%' OR
+        				A.USER_NAME LIKE '%'+ #{searchKey} + '%' OR
+        				A.USER_EMAIL LIKE '%'+ #{searchKey} + '%'
+        			)
+        		</otherwise>
+        	</choose>
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStartDt) and @org.apache.commons.lang3.StringUtils@isEmpty(searchEndDt)">
+        	<choose>
+        		<when test='searchPeriodType == "UST01000001"'>
+        			<![CDATA[AND #{searchStartDt} <= CONVERT(VARCHAR, A.CONFM_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "UST01000002"'>
+        			<![CDATA[AND #{searchStartDt} <= CONVERT(VARCHAR, B.WITHDRAW_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "UST01000003"'>
+        			<![CDATA[AND #{searchStartDt} <= CONVERT(VARCHAR, B.WITHDRAW_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "UST01000004"'>
+        			<![CDATA[AND #{searchStartDt} <= CONVERT(VARCHAR, B.INACTIVE_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "ARD"'><!-- account request date -->
+        			<![CDATA[AND #{searchStartDt} <= CONVERT(VARCHAR, A.REG_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "WRD"'><!-- withdraw request date -->
+        			<![CDATA[AND #{searchStartDt} <= CONVERT(VARCHAR, B.WITHDRAW_REQ_DT, 23)]]>
+        		</when>
+        		<otherwise>
+        			<![CDATA[
+        			AND (
+						#{searchStartDt} <= CONVERT(VARCHAR, A.CONFM_DT, 23) OR
+						#{searchStartDt} <= CONVERT(VARCHAR, B.WITHDRAW_DT, 23) OR
+						#{searchStartDt} <= CONVERT(VARCHAR, B.INACTIVE_DT, 23)
+       				)
+       				]]>
+        		</otherwise>
+        	</choose>
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isEmpty(searchStartDt) and @org.apache.commons.lang3.StringUtils@isNotEmpty(searchEndDt)">
+        	<choose>
+        		<when test='searchPeriodType == "UST01000001"'>
+        			<![CDATA[AND #{searchEndDt} >= CONVERT(VARCHAR, A.CONFM_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "UST01000002"'>
+        			<![CDATA[AND #{searchEndDt} >= CONVERT(VARCHAR, B.WITHDRAW_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "UST01000003"'>
+        			<![CDATA[AND #{searchEndDt} >= CONVERT(VARCHAR, B.WITHDRAW_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "UST01000004"'>
+        			<![CDATA[AND #{searchEndDt} >= CONVERT(VARCHAR, B.INACTIVE_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "ARD"'><!-- account request date -->
+        			<![CDATA[AND #{searchEndDt} >= CONVERT(VARCHAR, A.REG_DT, 23)]]>
+        		</when>
+        		<when test='searchPeriodType == "WRD"'><!-- withdraw request date -->
+        			<![CDATA[AND #{searchEndDt} >= CONVERT(VARCHAR, B.WITHDRAW_REQ_DT, 23)]]>
+        		</when>
+        		<otherwise>
+        			<![CDATA[
+        			AND (
+						#{searchEndDt} >= CONVERT(VARCHAR, A.CONFM_DT, 23) OR
+						#{searchEndDt} >= CONVERT(VARCHAR, B.WITHDRAW_DT, 23) OR
+						#{searchEndDt} >= CONVERT(VARCHAR, B.INACTIVE_DT, 23)
+       				)
+       				]]>
+        		</otherwise>
+        	</choose>
+        </if>
+        <if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(searchStartDt) and @org.apache.commons.lang3.StringUtils@isNotEmpty(searchEndDt)">
+        	<choose>
+        		<when test='searchPeriodType == "UST01000001"'>
+        			AND CONVERT(VARCHAR, A.CONFM_DT, 23) BETWEEN #{searchStartDt} AND #{searchEndDt}
+        		</when>
+        		<when test='searchPeriodType == "UST01000002"'>
+        			AND CONVERT(VARCHAR, B.WITHDRAW_DT, 23) BETWEEN #{searchStartDt} AND #{searchEndDt}
+        		</when>
+        		<when test='searchPeriodType == "UST01000003"'>
+        			AND CONVERT(VARCHAR, B.WITHDRAW_DT, 23) BETWEEN #{searchStartDt} AND #{searchEndDt}
+        		</when>
+        		<when test='searchPeriodType == "UST01000004"'>
+        			AND CONVERT(VARCHAR, B.INACTIVE_DT, 23) BETWEEN #{searchStartDt} AND #{searchEndDt}
+        		</when>
+        		<when test='searchPeriodType == "ARD"'><!-- account request date -->
+        			AND CONVERT(VARCHAR, A.REG_DT, 23) BETWEEN #{searchStartDt} AND #{searchEndDt}
+        		</when>
+        		<when test='searchPeriodType == "WRD"'><!-- withdraw request date -->
+        			AND CONVERT(VARCHAR, B.WITHDRAW_REQ_DT, 23) BETWEEN #{searchStartDt} AND #{searchEndDt}
+        		</when>
+        		<otherwise>
+        			AND (
+						CONVERT(VARCHAR, A.CONFM_DT, 23) BETWEEN #{searchStartDt} AND #{searchEndDt} OR
+						CONVERT(VARCHAR, B.WITHDRAW_DT, 23) BETWEEN #{searchStartDt} AND #{searchEndDt} OR
+						CONVERT(VARCHAR, B.INACTIVE_DT, 23) BETWEEN #{searchStartDt} AND #{searchEndDt}
+       				)
+        		</otherwise>
+        	</choose>
+        </if>
+        <if test="inactiveDay != null">
+        	<choose>
+        		<when test="inactiveDay == 365">
+        			<![CDATA[AND CONVERT(VARCHAR, DATEADD(DAY, 365, LAST_LOGINDE), 112) <= CONVERT(VARCHAR, GETDATE(), 112)]]>
+        		</when>
+        		<otherwise>
+        			AND CONVERT(VARCHAR, DATEADD(DAY, 365, LAST_LOGINDE), 112) = CONVERT(VARCHAR, DATEADD(DAY, #{inactiveDay}, GETDATE()), 112)
+        		</otherwise>
+        	</choose>
+        	AND A.LAST_LOGINDE IS NOT NULL
+        	AND B.INACTIVE_DT IS NULL
+        	AND B.WITHDRAW_DT IS NULL
+        </if>
+		<include refid="shared.university.admin.mapper.common.commonMapper.selectPagingBottom" />
+    </select>
+    
+    <update id="updateUserDetail" parameterType="map">
+    	/* userManagementMapper.updateUserDetail */
+    	DECLARE @SEQ INT
+		SET @SEQ = #{userSeq}
+
+    	IF NOT EXISTS (SELECT 1 FROM SHARE_ADMIN.DBO.TBL_USER_DETAIL WHERE USER_SEQ = @SEQ)
+    		INSERT INTO SHARE_ADMIN.DBO.TBL_USER_DETAIL(
+    			  USER_SEQ
+    			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(withdrawReason)">
+    			, WITHDRAW_REASON
+    			, WITHDRAW_REQ_DT
+    			</if>
+    			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(withdrawRejectReason)">
+    			, WITHDRAW_REJECT_REASON
+    			</if>
+    			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(accountRejectReason)">
+    			, ACCOUNT_REJECT_REASON
+    			</if>
+    			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(statusCode)">
+	    			<choose>
+	        			<when test='statusCode == "UST01000002" or statusCode == "UST01000003"'>
+	        			, WITHDRAW_DT
+	        			</when>
+	        			<when test='statusCode == "UST01000004"'>
+	        			, INACTIVE_DT
+	        			</when>
+        			</choose>
+       			</if>
+    		)
+    		VALUES(
+    			@SEQ
+    			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(withdrawReason)">
+    			, #{withdrawReason}
+    			, GETDATE() <!-- WITHDRAW_REG_DT -->
+    			</if>
+    			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(withdrawRejectReason)">
+    			, #{withdrawRejectReason}
+    			</if>
+    			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(accountRejectReason)">
+    			, #{accountRejectReason}
+    			</if>
+    			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(statusCode)">
+	    			<choose>
+	        			<when test='statusCode == "UST01000002" or statusCode == "UST01000003"'>
+	        			, GETDATE() <!-- WITHDRAW_DT -->
+	        			</when>
+	        			<when test='statusCode == "UST01000004"'>
+	        			, CONVERT(VARCHAR ,GETDATE(), 112) <!-- INACTIVE_DT -->
+	        			</when>
+        			</choose>
+       			</if>
+    		)
+    	ELSE
+    	UPDATE SHARE_ADMIN.DBO.TBL_USER_DETAIL
+    	SET
+    		USER_SEQ = USER_SEQ
+    		<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(withdrawReason)">
+    			, WITHDRAW_REASON = #{withdrawReason}
+    			, WITHDRAW_REQ_DT = GETDATE()
+   			</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(withdrawRejectReason)">
+   			, WITHDRAW_REJECT_REASON = #{withdrawRejectReason}
+   			</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(accountRejectReason)">
+   			, ACCOUNT_REJECT_REASON = #{accountRejectReason}
+   			</if>
+   			<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(statusCode)">
+    			<choose>
+        			<when test='statusCode == "UST01000002" or statusCode == "UST01000003"'>
+        			, WITHDRAW_DT = GETDATE()
+        			</when>
+        			<when test='statusCode == "UST01000004"'>
+        			, INACTIVE_DT = CONVERT(VARCHAR ,GETDATE(), 112)
+        			</when>
+       			</choose>
+			</if>
+    	WHERE
+    		USER_SEQ = @SEQ;
+    		
+    	<if test="@org.apache.commons.lang3.StringUtils@isNotEmpty(statusCode)">
+	        <if test='statusCode == "UST01000002" or statusCode == "UST01000003"'>
+	        	DELETE FROM SHARE_PORTAL.DBO.WZD_MANAGER_INFO
+	        	WHERE USER_ID = (SELECT USER_ID FROM SHARE_ADMIN.DBO.TBL_USER WHERE USER_SEQ = #{userSeq})
+	        	AND MNGR_TYPE = 'SITE';
+	        </if>
+        </if>
+    </update>
+    
+	<update id="updateUserAccountConfirm" parameterType="map">
+    	/* userManagementMapper.updateUserAccountConfirm */
+    	DECLARE @MVL INT
+    			, @USER_ID VARCHAR
+    			, @SITE_ID VARCHAR
+    	SET @MVL = (SELECT MVL FROM SHARE_PORTAL.DBO.WZD_MVL_NO WHERE FNCT='WZD_MANAGER_INFO')
+    	SET @USER_ID = (SELECT USER_ID FROM SHARE_ADMIN.DBO.TBL_USER WHERE USER_SEQ = #{userSeq}) 
+    	SET @SITE_ID = (SELECT TOP 1 SITE_ID FROM SHARE_ADMIN.DBO.TBL_USER WHERE USER_SEQ = #{userSeq}) 
+    	
+    	UPDATE SHARE_ADMIN.DBO.TBL_USER
+    	SET
+    		  CONFM_YN 			= 'Y'
+    		, CONFM_DT 			= GETDATE()
+    		, CONFM_USER_SEQ 	= #{modUserSeq}
+    		, STATUS_CODE		= #{statusCode}
+   		WHERE USER_SEQ = #{userSeq};
+   		
+   		INSERT INTO SHARE_PORTAL.DBO.WZD_MANAGER_INFO (
+        	  MNGR_SEQ
+        	, USER_ID
+        	, SERVICE_GROUP_SEQ
+        	, SITE_ID
+        	, MNGR_TYPE
+        	, RGSDE
+   		) VALUES (
+    		  @MVL
+    		, @USER_ID
+    		, 1
+    		, @SITE_ID
+    		, 'SITE'
+    		, GETDATE()
+		);
+		
+		UPDATE SHARE_PORTAL.DBO.WZD_MVL_NO
+		SET
+			MVL = MVL + 1
+		WHERE FNCT = 'WZD_MANAGER_INFO';
+    </update>
+</mapper>

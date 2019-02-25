@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link href="/admin/resources/homepage/css/common.css" rel="stylesheet"> <!-- 공유대학 공통 -->
+    <script type="text/javascript" src="/admin/resources/homepage/js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="/admin/resources/homepage/js/univ-ui.js"></script>
+
+
+    <script>
+        function pageLoad() {
+            $("#contentsLayer").load(
+                $("#urlField").val()
+            );
+        }
+    </script>
+</head>
+<body>
+    <div>
+        <input kr-input id="urlField" type="text" style="width: 400px; font-size: large" value="/admin/exchange/viewHopeSubjectList.do">&nbsp;
+        <input type="button" style="font-size: large" value="페이지 로드" onclick="pageLoad()">
+    </div>
+
+    <div id="contentsLayer" style="border: red solid 2px">
+
+    </div>
+</body>
+</html>

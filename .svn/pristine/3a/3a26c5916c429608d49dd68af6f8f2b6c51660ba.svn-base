@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<script>
+    function goAdmin() {
+        var params = getParams();
+        console.log('host(%s), hostname(%s), protocol(%s), port(%s) ', location.host, location.hostname, location.protocol, location.port);
+
+        location.href = location.protocol + '//' + location.host + '/admin/login/login.do?' + params;
+    }
+
+    function goPotal() {
+        var params = getParams();
+        location.href = location.protocol + '//www.sfup.or.kr/subLogin/college/view.do' + params + '&layout=unknown';
+    }
+
+    function getParams() {
+        var urls = location.href.split("?");
+        if (urls.length === 2) {
+            return urls[1];
+        } else {
+            return '';
+        }
+    }
+</script>
+
+<body>
+<div style="text-align: center">
+    <h1 style="cursor: pointer" onclick="goPotal();">학생/시민 로그인</h1><br/><br/>
+    <h1 style="cursor: pointer" onclick="goAdmin();">관리자 로그인</h1>
+</div>
+</body>
+</html>

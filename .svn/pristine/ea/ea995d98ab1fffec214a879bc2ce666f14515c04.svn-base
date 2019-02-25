@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <!-- Log Pattern -->
+    <property name="logPattern" value="%d{yyyy-MM-dd HH:mm:ss.sss} %-5level - [%logger] %msg%n"/>
+    <property name="logPatternWithLogKey" value="%d{yyyy-MM-dd HH:mm:ss.sss} %-5level - [%X{logKey}] %msg%n"/>
+
+    <!-- Appender -->
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder><pattern>${logPattern}</pattern></encoder>
+    </appender>
+    <appender name="consoleWithLogKey" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder><pattern>${logPatternWithLogKey}</pattern></encoder>
+    </appender>
+
+
+    <!-- Service Log -->
+    <logger name="shared.university.admin" additivity="false">
+        <appender-ref ref="consoleWithLogKey" />
+    </logger>
+
+    <!-- Mapper Log -->
+    <logger name="codeMapper" additivity="false">
+        <appender-ref ref="consoleWithLogKey" />
+    </logger>
+      <logger name="moocmappingMapper" additivity="false">
+        <appender-ref ref="consoleWithLogKey" />
+    </logger>    
+    <logger name="menuMapper" additivity="false">
+        <appender-ref ref="consoleWithLogKey" />
+    </logger>
+    <logger name="termsMapper" additivity="false">
+        <appender-ref ref="consoleWithLogKey" />
+    </logger>
+    <logger name="userMapper" additivity="false">
+        <appender-ref ref="consoleWithLogKey" />
+    </logger>
+    <logger name="fileMapper" additivity="false">
+        <appender-ref ref="consoleWithLogKey" />
+    </logger>
+    <logger name="loginMapper" additivity="false">
+        <appender-ref ref="consoleWithLogKey" />
+    </logger>
+    <logger name="mailAuthMapper" additivity="false">
+        <appender-ref ref="consoleWithLogKey" />
+    </logger>
+
+    <!-- Library Log -->
+    <logger name="egovframework" level="INFO" />
+    <logger name="org.springframework" level="INFO" />
+    <logger name="java.sql" level="INFO" />
+    <logger name="org.apache.commons" level="INFO" />
+    <logger name="org.mybatis" level="INFO" />
+
+    <!-- ROOT Log -->
+    <root level="DEBUG">
+        <appender-ref ref="console" />
+    </root>
+
+</configuration>

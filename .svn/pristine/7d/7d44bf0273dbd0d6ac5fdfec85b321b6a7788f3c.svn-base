@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource">
+		<property name="driverClassName" value="${datasource.driver}" />
+		<property name="url" value="${datasource.url}" />
+		<property name="username" value="${datasource.username}" />
+		<property name="password" value="${datasource.password}" />
+		<property name="minIdle" value="${datasource.min.idle}" />
+		<property name="maxIdle" value="${datasource.max.idle}" />
+		<property name="maxActive" value="${datasource.max.active}" />
+		<property name="testOnBorrow" value="true" />
+		<property name="validationQuery" value="SELECT 1" />
+		<property name="removeAbandoned" value="true" />
+	</bean>
+	
+	<bean id="dataSource2" class="org.apache.tomcat.jdbc.pool.DataSource">
+		<property name="driverClassName" value="${datasource2.driver}" />
+		<property name="url" value="${datasource2.url}" />
+		<property name="username" value="${datasource2.username}" />
+		<property name="password" value="${datasource2.password}" />		
+		<property name="minIdle" value="${datasource2.min.idle}" />
+		<property name="maxIdle" value="${datasource2.max.idle}" />
+		<property name="maxActive" value="${datasource2.max.active}" />
+		
+	</bean>
+	
+	
+	<bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:/egovframework/sqlMap/sql-mapper-config.xml" />
+		<property name="mapperLocations" value="classpath*:mapper/*.xml" />
+	</bean>
+
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sessionFactory" />
+	</bean>
+	
+	<!-- 추가 -->
+		<bean id="sessionFactory2" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource2" />
+		<property name="configLocation" value="classpath:/egovframework/sqlMapMooc/sql-mapper-config.xml" />
+		<property name="mapperLocations" value="classpath*:mapperMooc/*.xml" />
+	</bean>
+
+	<bean id="sqlSession2" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sessionFactory2" />
+	</bean>
+	
+	  
+<!-- 
+	<bean id="dataSource_mysql" class="org.apache.tomcat.jdbc.pool.DataSource">
+		<property name="driverClassName" value="${datasource_mysql.driver}" />
+		<property name="url" value="${datasource_mysql.url}" />
+		<property name="username" value="${datasource_mysql.username}" />
+		<property name="password" value="${datasource_mysql.password}" />
+		<property name="minIdle" value="${datasource_mysql.min.idle}" />
+		<property name="maxIdle" value="${datasource_mysql.max.idle}" />
+		<property name="maxActive" value="${datasource_mysql.max.active}" />
+	</bean>
+	
+
+	<bean id="sessionFactory_mysql" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource_mysql" />
+		<property name="configLocation" value="classpath:/egovframework/sqlMap_mysql/sql-mapper-config.xml" />
+		<property name="mapperLocations" value="classpath*:mapper/*.xml" />
+	</bean>
+
+	<bean class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg index="0" ref="sessionFactory_mysql" />
+	</bean>
+
+ -->
+	 
+</beans>

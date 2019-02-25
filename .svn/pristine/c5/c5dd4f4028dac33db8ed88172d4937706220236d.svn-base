@@ -1,0 +1,252 @@
+<body class="_popup _langko">
+	<div id="_wrap">
+		<div class="_popupInner">
+			<div class="_popHeader">
+				<span class="pop_Title">발송 결과 상세</span>
+	    		<a href="javascript:void(0);" ng-click="closeThisDialog();" class="pop_close">close</a>
+			</div>
+			<div id="_articleContent" class="_articleContent">
+               <div class="_articleContent mwx1200">
+                   <div class="_border _write mt10">
+                       <div class="_inner">
+                           <fieldset>
+                           <legend>월별 접속통계 조회 </legend>
+                           <form name="selYearForm" method="post">
+                               <div class="_form _both">
+                                   <div class="_insert tableWrap w1120">
+                                       <div class="innTable">
+                                           <table class="w80">
+                                               <colgroup>
+                                                   <col style="width:7%">
+                                                   <col style="width:13%">
+                                                   <col style="width:7%">
+                                                   <col style="width:14%">
+                                                   <col style="width:7%">
+                                                   <col style="width:10%">
+                                                   <col style="width:7%">
+                                                   <col style="width:16%">
+                                                   <col style="width:7%">
+                                                   <col style="width:16%">
+                                               </colgroup>
+                                               <tbody>
+                                                   <tr>
+                                                       <td><label for="sch_year" class="pl10">년도</label></td>
+                                                       <td>
+                                                           <select name="sch_year" id="sch_year" class="_selectBox _fL wx150">
+                                                               <option value="">전체</option>
+                                                                   <option value="value">전체</option>
+                                                                   <option value="value">2018년도</option>
+                                                                   <option value="value">2017년도</option>
+                                                                   <option value="value">2016년도</option>
+                                                                   <option value="value">2015년도</option>
+                                                           </select>
+                                                       </td>
+                                                       <td><label for="sch_quarter" class="pl10">학기</label></td>
+                                                       <td>
+                                                          <select name="sch_quarter" id="sch_quarter" class="_selectBox _fR wx115">
+                                                               <option value="value">선택</option>
+                                                               <option value="value">1학기</option>
+                                                               <option value="value">2학기</option>
+                                                               <option value="value">여름계절학기</option>
+                                                               <option value="value">겨울계절학기</option>
+                                                           </select>
+                                                       </td>
+                                                       <td></td>
+                                                       <td></td>
+                                                       <td><label for="sch_kind" class="pl20">소속대학</label></td>
+                                                       <td>
+                                                           <select name="sch_kind" id="sch_kind" class="_selectBox _fL wx120">
+                                                               <option value="value">전체</option>
+                                                                   <option value="value">서울지역</option>
+                                                                   <option value="value">경인지역</option>
+                                                                   <option value="value">부경울제</option>
+                                                                   <option value="value">부경울제</option>
+                                                                   <option value="value">대전세종충남</option>
+                                                                   <option value="value">광주전남</option>
+                                                           </select>
+                                                       </td>
+                                                       <td colspan="2">
+                                                           <select name="sch_kind2" id="sch_kind2" class="_selectBox _fL wx200">
+                                                               <option value="value">전체</option>
+                                                                   <option value="value">카톨릭대학교</option>
+                                                                   <option value="value">건국대학교</option>
+                                                                   <option value="value">광운대학교</option>
+                                                                   <option value="value">동국대학교</option>
+                                                                   <option value="value">동덕여자대학교</option>
+                                                                   <option value="value">명지대학교</option>
+                                                                   <option value="value">삼육대학교</option>
+                                                                   <option value="value">상명대학교</option>
+                                                                   <option value="value">서강대학교</option>
+                                                                   <option value="value">서경대학교</option>
+                                                                   <option value="value">서울과학기술대학교</option>
+                                                                   <option value="value">서울시립대학교</option>
+                                                                   <option value="value">서울여자대학교</option>
+                                                                   <option value="value">성공회대학교</option>
+                                                                   <option value="value">세종대학교</option>
+                                                                   <option value="value">숙명여자대학교</option>
+                                                                   <option value="value">숭실대학교</option>
+                                                                   <option value="value">이화여자대학교</option>
+                                                                   <option value="value">중앙대학교</option>
+                                                                   <option value="value">추계예술대학교</option>
+                                                                   <option value="value">한국외국어대학교</option>
+                                                                   <option value="value">한성대학교</option>
+                                                                   <option value="value">홍익대학교</option>
+                                                                   <option value="value">KC대학교</option>
+                                                           </select>
+                                                       </td>
+                                                   </tr>
+                                                   <tr>
+                                                       <td><label for="sch_kind" class="pl10">학교 구분</label></td>
+                                                       <td>
+                                                           <select name="sch_kind" id="sch_kind" class="_selectBox _fL wx150">
+                                                               <option value="value">전체</option>
+                                                                   <option value="value">서울지역</option>
+                                                                   <option value="value">경인지역</option>
+                                                                   <option value="value">부경울제</option>
+                                                                   <option value="value">부경울제</option>
+                                                                   <option value="value">대전세종충남</option>
+                                                                   <option value="value">광주전남</option>
+                                                           </select>
+                                                       </td>
+                                                       <td colspan="2">
+                                                           <select name="sch_kind2" id="sch_kind2" class="_selectBox _fL w99">
+                                                               <option value="value">전체</option>
+                                                                   <option value="value">카톨릭대학교</option>
+                                                                   <option value="value">건국대학교</option>
+                                                                   <option value="value">광운대학교</option>
+                                                                   <option value="value">동국대학교</option>
+                                                                   <option value="value">동덕여자대학교</option>
+                                                                   <option value="value">명지대학교</option>
+                                                                   <option value="value">삼육대학교</option>
+                                                                   <option value="value">상명대학교</option>
+                                                                   <option value="value">서강대학교</option>
+                                                                   <option value="value">서경대학교</option>
+                                                                   <option value="value">서울과학기술대학교</option>
+                                                                   <option value="value">서울시립대학교</option>
+                                                                   <option value="value">서울여자대학교</option>
+                                                                   <option value="value">성공회대학교</option>
+                                                                   <option value="value">세종대학교</option>
+                                                                   <option value="value">숙명여자대학교</option>
+                                                                   <option value="value">숭실대학교</option>
+                                                                   <option value="value">이화여자대학교</option>
+                                                                   <option value="value">중앙대학교</option>
+                                                                   <option value="value">추계예술대학교</option>
+                                                                   <option value="value">한국외국어대학교</option>
+                                                                   <option value="value">한성대학교</option>
+                                                                   <option value="value">홍익대학교</option>
+                                                                   <option value="value">KC대학교</option>
+                                                           </select>
+                                                       </td>
+                                                       <td><label for="sms_result" class="pl10">발송<br>결과</label></td>
+                                                       <td>
+                                                           <select name="sms_result" id="sms_result" class="_selectBox _fL wx80">
+                                                               <option value="">전체</option>
+                                                                   <option value="value">전체</option>
+                                                                   <option value="value">성공</option>
+                                                                   <option value="value">대기</option>
+                                                                   <option value="value">실패</option>
+                                                           </select>
+                                                       </td>
+                                                       <td><label for="sch_search" class="pl20">검색</label></td>
+                                                       <td colspan="3">
+                                                           <select name="sch_search" id="sch_search" class="_selectBox _fL wx120">
+                                                               <option value="value">전체</option>
+                                                               <option value="value">소속대학</option><option value="value">수강과목</option>
+                                                               <option value="value">학과</option>
+                                                               <option value="value">아이디</option>
+                                                               <option value="value">성명</option>
+                                                               <option value="value">소속대학 학번</option><option value="value">교류대학 학번</option>
+                                                               <option value="value">핸드폰 번호</option>
+                                                           </select>
+                                                           <input type="text" id="" placeholder="" class="w60">
+                                                       </td>
+                                                   </tr>
+                                               </tbody>
+                                           </table>
+                                       </div>
+                                       <div class="_areaButton innerBtn">
+                                           <div class="_right">
+                                               <span class="_button _small _active searchBtn"><input type="button" value="조회" onclick=""></span>
+                                               <span class="_button _small resetBtn mt2"><input type="button" value="초기화" onclick=""></span>
+                                           </div>
+                                       </div>
+                                   </div>
+                               </div>
+                           </form>
+                       </fieldset>
+                       </div>
+                   </div>
+                   <div class="_listHead">
+                       <div class="_count wBg pl0">
+                           총  대상자 :<strong>100<!-- <em>/100</em> --></strong>  명
+                       </div>
+                       <div class="_search pr0 _right">
+                           <div class="_btnSet pr0">
+                               <span class="_large"><a class="downBtn" >엑셀다운</a></span>
+                           </div>
+                       </div>
+                   </div>
+                   <table class="_table _list w100 ">
+                       <caption>표 제목</caption>
+                       <colgroup>
+                           <col style="width:40px;">
+                           <col style="width:10%;">
+                           <col style="width:10%;"> 
+                           <col style="width:15%;"> 
+                           <col style="width:8%;"> 
+                           <col style="width:8%;"> 
+                           <col style="width:8%;"> 
+                           <col style="width:12%;">
+                           <col style="width:7%;">  
+                       </colgroup>
+                       <thead>
+                           <tr>
+                               <th>번호</th>
+                               <th><span class="lineUp">소속대학<a class="up"></a></span></th>
+                               <th>학과</th>
+                               <th>아이디</th>
+                               <th>성명</th>
+                               <th>소속대학<br>학번</th>
+                               <th>교류대학<br>학번</th>
+                               <th>핸드폰번호</th>
+                               <th>발송결과</th>
+                           </tr>
+                       </thead>
+                       <tbody ng-show="$root.message.smsSendManagement.sendResultInfo.resultInfo.length === 0">
+                           <tr class="nosearchData" style="display:lnline-block;">
+                               <td colspan="9">
+                                받는사람이 없습니다.
+                               </td>
+                           </tr>
+                       </tbody>
+                       <tbody ng-show="$root.message.smsSendManagement.sendResultInfo.resultInfo.length > 0">
+                           <tr ng-repeat="data in $root.message.smsSendManagement.sendResultInfo.resultInfo">
+                               <td>{{data.rowNumber}}</td>
+                               <td>{{data.univCodeName}}</td>
+                               <td class="_aL">{{data.userDepartment}}</td>
+                               <td>{{data.userId}}</td>
+                               <td>{{data.userName}}</td>
+                               <td>{{data.studentNumber}}</td>
+                               <td>{{data.mouStudentNumber}}</td>
+                               <td>{{data.cellNo}}</td>
+                               <td>{{data.sendStatus}}</td>    
+                           </tr>
+                       </tbody>
+                   </table>
+                   <div class="_paging"></div>
+               </div>
+               <div class="_areaButton">
+                   <div class="_search pr0 _right">
+                       <div class="_btnSet pr0">
+                           <span class="_large"><a class="downBtn">엑셀다운</a></span>
+                       </div>
+                   </div>
+               </div>
+               <div class="_areaButton">
+                   <div class="_center">
+                       <span class="_button _large blackBtn"><a ng-click="closeThisDialog();">닫기</a></span>
+                   </div>
+               </div>
+		</div><!-- #_articleContent" -->
+	</div>
+</body>

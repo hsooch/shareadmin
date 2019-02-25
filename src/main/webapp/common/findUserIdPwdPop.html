@@ -1,0 +1,86 @@
+<div class="container" style="padding:10px 10px 0px 10px !important; min-height:0px; height:auto;">
+	<section class="section-wrap layer-wrap">
+		<h2 class="title">아이디/비밀번호 찾기</h2>
+		<a href="javascript:void(0);" ng-click="closeLayerPopup()" class="btn-layer-x"><span><span class="hidden">창닫기</span></span></a>
+		
+		<ul class="tab-menu">
+			<li ng-class="{active:findView_step == 1 || findView_step == 2}"><a href="javascript:void(0);" ng-click="findIdDiv()">아이디 찾기</a></li>
+			<li ng-class="{active:pwdErrPermitedCnt_step == 1 || pwdErrPermitedCnt_step == 2}"><a href="javascript:void(0);" ng-click="findPwdDiv()">비밀번호 찾기</a></li>
+		</ul>
+          
+		<!-- 아이디찾기 : 본인 인증 -->
+		<div class="content-wrap idpw-wrap" style="margin-top: 11px;" ng-show="findView_step == 1">
+			<div class="inner">
+				<p class="tx-idpw">* 아이디를 찾기위해 본인인증을 진행해주세요.</p>
+				<section class="section-confirm">
+					<div class="box box1">
+						<h3 class="title-confirm">휴대폰 인증</h3>
+						<button type="button" class="btn btn-blue" ng-click="cellPhoneCertificate()">인증하기</button>
+					</div>
+					<div class="box box2">
+						<h3 class="title-confirm">EPKI 인증</h3>
+						<button type="button" class="btn btn-blue" ng-click="epkiCertificate()">인증하기</button>
+					</div>
+				</section>
+			</div>
+		</div>
+		<!-- //아이디찾기 : 본인 인증-->
+		
+		<!-- 아이디찾기 : 찾기 완료 -->
+		<div class="content-wrap idpw-wrap" style="margin-top: 11px;" ng-show="findView_step == 2">
+			<div class="inner">
+				<div class="result-area">
+					<p class="tx-finish">
+						아이디 찾기가 완료 되었습니다.<br>회원님의 아이디는 아래와 같습니다.
+					</p>
+					<div class="idpw-result">
+						<span>{{userEmail}}</span>
+					</div>
+					<p class="tx-idpw">* 비밀번호 찾기를 원하시는 분은 상단의 비밀번호 찾기 탭을 클릭해주세요.</p>
+				</div>
+			</div>
+		</div>
+		<!-- //아이디찾기 : 찾기 완료 -->
+		
+		<!-- 비밀번호찾기 : 본인 인증 -->
+		<div class="content-wrap idpw-wrap" style="margin-top: 11px;" ng-show="pwdErrPermitedCnt_step == 1">
+			<div class="inner">
+				<p class="tx-idpw">* 아이디 입력 후 본인인증을 해주세요.<br>인증을 완료하시면 임시 비밀번호를 발급해 드립니다.</p>
+				<div class="find-input">
+					<label for="userid">아이디</label>
+					<input kr-input type="text" id="userid" class="form-control" ng-model="userId">
+				</div>
+				<section class="section-confirm">
+					<div class="box box1">
+						<h3 class="title-confirm">휴대폰 인증</h3>
+						<button type="button" class="btn btn-blue" ng-click="cellPhoneCertificate2()">인증하기</button>
+					</div>
+					<div class="box box2">
+						<h3 class="title-confirm">EPKI 인증</h3>
+						<button type="button" class="btn btn-blue" ng-click="epkiCertificate2()">인증하기</button>
+					</div>
+				</section>
+			</div>
+		</div>
+		<!-- //비밀번호찾기 : 본인 인증-->
+		
+		<!-- 비밀번호찾기 : 찾기 완료 -->
+		<div class="content-wrap idpw-wrap" style="margin-top: 11px;" ng-show="pwdErrPermitedCnt_step == 2">
+			<div class="inner">
+				<div class="result-area">
+					<p class="tx-finish">
+						회원가입 시 등록한 이메일로<br>임시비밀번호를 발급 하였습니다.
+					</p>
+					<div class="idpw-result">
+						<span>이메일 : {{userEmail}}</span>
+					</div>
+					<p class="tx-idpw">* 임시 비밀번호로 로그인 하신 후 에는 반드시 비밀번호를 재설정 해주시기 바랍니다.</p>
+				</div>
+			</div>
+		</div>
+		<!-- //비밀번호찾기 : 찾기 완료 -->
+		<div>
+			<button type="button" class="btn btn-gray" style="margin:5px 282px;" ng-click="closeLayerPopup();">닫기</button>
+		</div>
+	</section>
+</div>

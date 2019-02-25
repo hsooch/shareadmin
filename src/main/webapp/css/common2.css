@@ -1,0 +1,106 @@
+
+@font-face { font-family: 'noto-thin'; font-weight: normal; font-style: normal; src: url("../css/font/eot/NotoSansKR-Thin-Hestia.eot"); src: local("※"), url("../css/font/eot/NotoSansKR-Thin-Hestia.eot?#iefix") format("embedded-opentype"), url("../css/font/woff/NotoSansKR-Thin-Hestia.woff") format("woff"), url("../css/font/otf/NotoSansKR-Thin-Hestia.otf") format("truetype"); }
+@font-face { font-family: 'noto-light'; font-weight: normal; font-style: normal; src: url("../css/font/eot/NotoSansKR-Light-Hestia.eot"); src: local("※"), url("../css/font/eot/NotoSansKR-Light-Hestia.eot?#iefix") format("embedded-opentype"), url("../css/font/woff/NotoSansKR-Light-Hestia.woff") format("woff"), url("../css/font/otf/NotoSansKR-Light-Hestia.otf") format("truetype"); }
+@font-face { font-family: 'noto-demilight'; font-weight: normal; font-style: normal; src: url("../css/font/eot/NotoSansKR-DemiLight-Hestia.eot"); src: local("※"), url("../css/font/eot/NotoSansKR-DemiLight-Hestia.eot?#iefix") format("embedded-opentype"), url("../css/font/woff/NotoSansKR-DemiLight-Hestia.woff") format("woff"), url("../css/font/otf/NotoSansKR-DemiLight-Hestia.otf") format("truetype"); }
+@font-face { font-family: 'noto-regular'; font-weight: normal; font-style: normal; src: url("../css/font/eot/NotoSansKR-Regular-Hestia.eot"); src: local("※"), url("../css/font/eot/NotoSansKR-Regular-Hestia.eot?#iefix") format("embedded-opentype"), url("../css/font/woff/NotoSansKR-Regular-Hestia.woff") format("woff"), url("../css/font/otf/NotoSansKR-Regular-Hestia.otf") format("truetype"); }
+@font-face { font-family: 'noto-medium'; font-weight: normal; font-style: normal; src: url("../css/font/eot/NotoSansKR-Medium-Hestia.eot"); src: local("※"), url("../css/font/eot/NotoSansKR-Medium-Hestia.eot?#iefix") format("embedded-opentype"), url("../css/font/woff/NotoSansKR-Medium-Hestia.woff") format("woff"), url("../css/font/otf/NotoSansKR-Medium-Hestia.otf") format("truetype"); }
+@font-face { font-family: 'noto-bold'; font-weight: normal; font-style: normal; src: url("../css/font/eot/NotoSansKR-Bold-Hestia.eot"); src: local("※"), url("../css/font/eot/NotoSansKR-Bold-Hestia.eot?#iefix") format("embedded-opentype"), url("../css/font/woff/NotoSansKR-Bold-Hestia.woff") format("woff"), url("../css/font/otf/NotoSansKR-Bold-Hestia.otf") format("truetype"); }
+@font-face { font-family: 'noto-black'; font-weight: normal; font-style: normal; src: url("../css/font/eot/NotoSansKR-Black-Hestia.eot"); src: local("※"), url("../css/font/eot/NotoSansKR-Black-Hestia.eot?#iefix") format("embedded-opentype"), url("../css/font/woff/NotoSansKR-Black-Hestia.woff") format("woff"), url("../css/font/otf/NotoSansKR-Black-Hestia.otf") format("truetype"); }
+
+/* reset */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 16px;
+	font: inherit;
+	vertical-align: baseline;
+	font-family:"noto-light", "맑은 고딕", "Malgun Gothic", Dotum, Arial, sans-serif;
+	box-sizing:border-box;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body *{
+	font-family:"noto-light", "맑은 고딕", "Malgun Gothic", Dotum, Arial, sans-serif;
+	line-height: 1;
+}
+html,body{
+	width:100%;
+	height:100%;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+.hide,
+.blind,
+caption,
+legend {
+	visibility: hidden;
+	overflow: hidden;
+	/* position: absolute; */
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	font-size: 0;
+	line-height: 0
+}
+.clearFix:after {
+	display: block;
+	clear: both;
+	content: ''
+}
+* html .clearFix {
+	zoom: 1
+}
+a {
+	text-decoration: none;
+	color:#000;
+}
+a:hover,a:focus,a:active,a:visited{
+	color:#000;
+}
+input[type="radio"], input[type="checkbox"]{
+	margin:0;
+}
+input{
+	font-family:"noto-light", "맑은 고딕", "Malgun Gothic", Dotum, Arial, sans-serif
+}
+
+article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary { display: block; }
+
+.col-xs-1, .col-sm-1, .col-md-1, .col-lg-1, .col-xs-2, .col-sm-2, .col-md-2, .col-lg-2, .col-xs-3, .col-sm-3, .col-md-3, .col-lg-3, .col-xs-4, .col-sm-4, .col-md-4, .col-lg-4, .col-xs-5, .col-sm-5, .col-md-5, .col-lg-5, .col-xs-6, .col-sm-6, .col-md-6, .col-lg-6, .col-xs-7, .col-sm-7, .col-md-7, .col-lg-7, .col-xs-8, .col-sm-8, .col-md-8, .col-lg-8, .col-xs-9, .col-sm-9, .col-md-9, .col-lg-9, .col-xs-10, .col-sm-10, .col-md-10, .col-lg-10, .col-xs-11, .col-sm-11, .col-md-11, .col-lg-11, .col-xs-12, .col-sm-12, .col-md-12, .col-lg-12{
+	padding-left:5px;
+	padding-right:5px;
+}
+.row{
+	margin-left:-5px;
+	margin-right:-5px;
+}

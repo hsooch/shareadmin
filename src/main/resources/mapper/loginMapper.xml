@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="loginMapper">
+
+    <select id="selectLoginUserInfo" parameterType="loginVO" resultType="userVO">
+    	/* loginMapper.selectLoginUserInfo */
+ 		SELECT 
+ 			  A.USER_SEQ
+ 			, A.USER_ID
+			, A.USER_NAME
+			, A.USER_EMAIL
+			, A.USER_TYPE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.USER_TYPE) AS USER_TYPE_NAME
+			, A.LAST_LOGINDE
+			, A.PWD_ERROR_CNT
+			, (SELECT PARENT_CODE FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_AREA_CD
+			, A.UNIV_CODE
+			, (SELECT CODE_NAME FROM TBL_CODE WHERE USE_YN = 'Y' AND DEL_YN = 'N' AND CODE = A.UNIV_CODE) AS UNIV_NAME
+			, A.DEPARTMENT
+			, A.BIRTHDAY
+			, A.MF_TYPE
+			, CASE A.MF_TYPE
+				WHEN '01' THEN '남'
+				WHEN '02' THEN '여'
+			  ELSE '' END AS MF_TYPE_DESC
+			, A.TEL_NO
+			, A.CELL_NO
+			, A.PWD_CHANGE_DATE
+			, A.CONFM_YN
+			, B.INDVDLINFO_AGREDE
+			, A.STATUS_CODE AS USER_STATUS_CD
+			, A.STUDENT_NUMBER
+			, A.USER_EMAIL
+
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(encPwd)">
+					, CASE WHEN A.USER_PWD = #{encPwd} THEN 'Y'
+						   WHEN A.USER_PWD_TMPR = #{encPwd} THEN 'Y'
+						   ELSE 'N'
+					  END SUCCESS_YN
+				</when>
+				<otherwise>
+					, 'Y' SUCCESS_YN
+				</otherwise>
+			</choose>
+
+		<![CDATA[
+			, CASE WHEN A.PWD_CHANGE_DATE IS NULL THEN 'Y'
+		           WHEN DATEADD(DAY, #{pwdChangeDay}, CONVERT(CHAR(10), A.PWD_CHANGE_DATE, 126)) <= CONVERT(CHAR(10), GETDATE(), 126) THEN 'Y'
+		           WHEN A.USER_PWD_TMPR = #{encPwd} THEN 'Y'
+		           ELSE 'N'
+		      END PWD_NEED_TO_CHG_YN
+		    , CASE WHEN A.PWD_ERROR_CNT IS NULL OR A.PWD_ERROR_CNT < #{pwdErrorPermitedCnt} THEN 'N'
+		           ELSE 'Y'
+		      END ERR_LOCK_YN
+		    , CASE WHEN A.LAST_LOGINDE IS NULL THEN 'N'
+		           WHEN DATEADD(DAY, #{inactiveDay}, CONVERT(VARCHAR, A.LAST_LOGINDE, 120)) <= CONVERT(VARCHAR, GETDATE(), 120) THEN 'Y'
+		           ELSE 'N'
+		      END LOCK_YN
+		]]>
+		FROM TBL_USER A
+		LEFT JOIN TBL_USER_DETAIL B ON A.USER_SEQ = B.USER_SEQ
+		<choose>
+			<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(userId)">
+				WHERE A.USER_ID = #{userId}
+			</when>
+			<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(di)">
+				WHERE A.USER_SEQ = (SELECT USER_SEQ FROM TBL_SELF_AUTH WHERE USER_DI = #{di})
+			</when>
+			<otherwise>
+				WHERE 1 != 1
+			</otherwise>
+		</choose>
+    </select>
+    
+    <update id="updateLoginErrorCnt" parameterType="loginVO">
+    	/* loginMapper.updateLoginErrorCnt */
+	    UPDATE TBL_USER
+	       SET PWD_ERROR_CNT = CASE WHEN ISNULL(PWD_ERROR_CNT,0) >= #{pwdErrorPermitedCnt}
+	                              THEN 1
+	                              ELSE ISNULL(PWD_ERROR_CNT,0) + 1
+	                         END
+	         , MOD_DT = GETDATE()
+	         , MOD_USER_SEQ = (SELECT USER_SEQ FROM TBL_USER WHERE USER_ID = #{userId})
+	     WHERE USER_ID  = #{userId}
+    </update>
+    
+    <update id="updateLoginSuccess" parameterType="loginVO">
+    	/* loginMapper.updateLoginSuccess */
+    	UPDATE TBL_USER
+       		SET PWD_ERROR_CNT = 0
+         	, LAST_LOGINDE = GETDATE()
+     	WHERE USER_ID  = #{userId}
+    </update>
+    
+    
+</mapper>

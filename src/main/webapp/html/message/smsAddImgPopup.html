@@ -1,0 +1,84 @@
+<div class="_popup _langko">
+	<div id="_wrap">
+		<div class="_popupInner">
+			<div class="_popHeader">
+                <span class="pop_Title"> 이미지 추가</span>
+                <a href="javascript:void(0);" ng-click="closeLayerPopup(false)" class="pop_close">close</a>
+            </div>
+			<div id="_articleContent" class="_articleContent">
+				<div class="_insert">
+					<div class="_table">
+						<table class="_table _view w100 borTop0">
+							<caption>이미지 추가 표</caption>
+							<colgroup>
+								<col style="width: 150px;">
+								<col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<th>사이즈<span class="mark"></span></th>
+									<td>
+										<div class="radioWrap">
+											<div class="radio">
+												<input type="radio" id="rad_Chek01" name="itmSoldout" title="가로[320px]" value="320"
+													ng-model="$root.message.smsSendManagement.smsInfo.imgWidth">
+												<label for="rad_Chek01"><span></span>가로[320px]</label>
+											</div>
+											<div class="radio">
+												<input type="radio" id="rad_Chek02" name="itmSoldout" title="가로[640px]" value="640"
+													ng-model="$root.message.smsSendManagement.smsInfo.imgWidth">
+												<label for="rad_Chek02"><span></span>가로[640px]</label>
+											</div>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<th>이미지<span class="mark"></span></th>
+									<td>
+										<p class="_popConLine">
+											<span class="_button _minimum _gray">
+												<label for="smsImageFile" style="cursor: pointer;min-width: 65px;height:28px;line-height:28px;border: 1px solid #757575;border-radius: 4px;background-color: #fff;color: #757575;letter-spacing: -.01em;padding: 0 .5em;background: #fff;text-align: center;word-wrap: break-word;display: inline-block;zoom: 1;margin: 0;font-size: 100%;vertical-align: baseline;font-weight: bold;border-spacing: 0;">이미지 등록</label>
+												<input id="smsImageFile" type="file" nv-file-select uploader="$root.message.smsSendManagement.uploader"
+													ng-file-select="onFileSelect($files)" ng-model="$root.message.smsSendManagement.smsInfo.imgSrc" style="display: none;"/>
+											</span>
+											<span ng-show="$root.message.smsSendManagement.uploader.queue.length == 0">선택된 이미지가 없습니다.</span>
+										</p>
+										<div class="addFileList">
+											<span>{{$root.message.smsSendManagement.uploader.queue[0].file.name}}</span>
+										</div>
+	<!-- 									<p class="_popConLine textAC"> -->
+	<!-- 										<span class="_button _minimum _apply"><a class="tabInnBtn typeB" ng-click="uploadImage();">업로드</a></span> -->
+	<!-- 									</p> -->
+										<p class="_popConLine">
+											1. 이미지 최대 용량 <span class="caution">총 200KB</span><br> 
+											2. 업로드한 이미지가 선택한 가로 사이즈를 넘어갈 경우, <br> &emsp; 
+											<span class="caution">가로 사이즈 320px 또는 640px로 자동 전환됨</span><br>
+											&emsp;&nbsp;(세로 사이즈는 가로 비율에 알맞게 자동 전환)<br> 
+											3. 통신사 정책에 의해 이미지는 <span class="caution">jpeg, jpg만 발송 가능합니다.</span><br>
+										</p>
+									</td>
+								</tr>
+								<!-- 업로드한 이미지가 없을경우 style="display:none;"  -->
+								<tr>
+									<th>미리보기<span class="mark"></span></th>
+									<td class="popImgWrap">
+										<div class="imgfile" ng-show="fileSize">
+											<img id="thumb-img" ng-show="$root.message.smsSendManagement.smsInfo.imgSrc" ng-src="{{$root.message.smsSendManagement.smsInfo.imgSrc }}" style="width:410px;height:auto; alt="">
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="_areaButton">
+					<div class="_center">
+						<span class="_button _large blackBtn" ng-click="closeLayerPopup(true);"><a >확인</a></span>
+						<span class="_button _large borderBtn" ng-click="closeLayerPopup(false);"><a >취소</a></span>
+					</div>
+				</div>
+			</div>
+			<!-- #_articleContent" -->
+		</div>
+	</div>
+</div>

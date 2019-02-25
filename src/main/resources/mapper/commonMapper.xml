@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shared.university.admin.mapper.common.commonMapper">
+
+	<sql id="selectPagingTop">
+		<if test='"N" != isPaging or "Y" == sortOnly'>
+			SELECT T1.*
+				,TOTAL_CNT-ROWNUM + 1 AS DESC_RN
+			FROM 
+			(
+				SELECT Row_Number() OVER (
+			<choose>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(sort) and @org.apache.commons.lang3.StringUtils@isNotEmpty(order)">
+				ORDER BY ${sort} ${order}
+				</when>
+				<when test="@org.apache.commons.lang3.StringUtils@isNotEmpty(sort) and @org.apache.commons.lang3.StringUtils@isEmpty(order)">
+				ORDER BY ${sort}
+				</when>
+				<otherwise>
+				ORDER BY GETDATE()
+				</otherwise>
+			</choose>
+			) AS ROWNUM
+					, count(1) over() AS TOTAL_CNT
+					, R.*
+				FROM (
+		</if>
+	</sql>
+	
+	<sql id="selectPagingBottom">
+		<if test='"N" != isPaging or "Y" == sortOnly'>
+			<![CDATA[
+					) R
+			) T1
+			]]>
+			<if test='"Y" != sortOnly'>
+				<![CDATA[   
+				WHERE ROWNUM BETWEEN (( CONVERT(INT, #{nowPage}) -1 ) * CONVERT(INT, #{rowCnt}) ) + 1 AND CONVERT(INT, #{nowPage} ) * CONVERT(INT, #{rowCnt})
+				]]>
+			</if>
+			<![CDATA[
+			ORDER BY ROWNUM
+			]]>
+		</if>
+	</sql>
+	
+	<sql id="selectPagingBottomWithoutOrderBy">
+		<if test='"N" != isPaging or "Y" == sortOnly'>
+			<![CDATA[   
+					) R
+			) T1
+			]]>
+			<if test='"Y" != sortOnly'>
+				<![CDATA[
+				WHERE ROWNUM BETWEEN (( CONVERT(INT, #{nowPage}) -1 ) * CONVERT(INT, #{rowCnt}) ) + 1 AND CONVERT(INT, #{nowPage} ) * CONVERT(INT, #{rowCnt})
+				]]>
+			</if>
+		</if>
+	</sql>
+</mapper>

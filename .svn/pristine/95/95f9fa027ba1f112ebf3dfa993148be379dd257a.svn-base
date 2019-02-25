@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="fileMapper">
+
+	<!-- 디스크에 저장된 파일 정보를 저장한다. -->
+    <insert id="insertFileInfo" parameterType="fileInfo">
+		INSERT INTO TBL_FILE_INFO(FILE_KEY, ORI_FILE_NAME, SAVE_FILE_NAME, SAVE_PATH,
+								  EXTENSION, DOWNLOAD_URL, FILE_SIZE)
+				VALUES (#{fileKey}, #{oriFileName}, #{saveFileName}, #{saveFullPath},
+						#{extension}, #{downloadUrl}, #{fileSize});
+	</insert>
+
+	<!-- 파일 정보를 조회 한다. -->
+	<select id="getFileInfo" parameterType="Map" resultType="fileInfo">
+		SELECT
+			FILE_KEY,
+			ORI_FILE_NAME,
+			SAVE_FILE_NAME,
+			SAVE_PATH AS SAVE_FULL_PATH,
+			EXTENSION,
+			DOWNLOAD_URL,
+			FILE_SIZE
+		FROM TBL_FILE_INFO
+		WHERE FILE_KEY = #{fileKey}
+	</select>
+
+	<!-- 파일 정보를 삭제한다. -->
+	<delete id="deleteFile" parameterType="Map">
+		DELETE FROM TBL_FILE_INFO WHERE FILE_KEY = #{fileKey}
+	</delete>
+	
+</mapper>

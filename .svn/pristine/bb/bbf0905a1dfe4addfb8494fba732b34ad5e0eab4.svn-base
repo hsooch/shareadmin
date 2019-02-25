@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<settings>
+	    <setting name="mapUnderscoreToCamelCase" value="true"/>
+	</settings>
+	
+    <typeAliases>
+		<typeAlias alias="universityInfo" type="shared.university.admin.domain.UniversityInfo"/>
+		<typeAlias alias="egovMap" type="egovframework.rte.psl.dataaccess.util.EgovMap"/>
+	    <typeAlias alias="codeVO" type="shared.university.admin.domain.CodeVO"/>
+	    <typeAlias alias="termsVO" type="shared.university.admin.domain.TermsVO"/>
+	    <typeAlias alias="mailAuthVO" type="shared.university.admin.domain.MailAuthVO"/>
+		<typeAlias alias="menuVO" type="shared.university.admin.domain.MenuVO"/>
+		<typeAlias alias="loginVO" type="shared.university.admin.domain.LoginVO"/>
+		<typeAlias alias="userVO" type="shared.university.admin.domain.UserVO"/>
+		<typeAlias alias="fileInfo" type="shared.university.admin.domain.FileInfo"/>
+		<typeAlias alias="mouVO" type="shared.university.admin.domain.MouUniversityVO"/>
+		<typeAlias alias="semesterVO" type="shared.university.admin.domain.SemesterVO"/>
+		<typeAlias alias="umap" type="shared.university.admin.UMap"/>
+		<typeAlias alias="subjectVO" type="shared.university.admin.domain.SubjectVO"/>
+    </typeAliases>
+</configuration>

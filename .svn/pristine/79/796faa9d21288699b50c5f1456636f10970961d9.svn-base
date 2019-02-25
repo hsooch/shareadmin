@@ -1,0 +1,40 @@
+@charset "utf-8";
+
+html{overflow-y:auto}
+
+._popupInner {position:relative; border:4px solid #333333;}
+._popupInner ._popHeader{position: relative;background-color:#333;color:#fff;border:0;height:50px;font-size:24px;font-weight:Regular;}
+.pop_Title{display:block;padding-left: 24px;font-size: 24px;line-height:50px;height: 50px;text-align:left;}
+._popupInner ._popContent{overflow:auto;word-break:break-all}
+._popupInner ._popHeader .pop_close,._popupInner ._popHeader .pop_close {position: absolute;top: 10px;right:15px;border: 0;width: 25px;height: 25px;text-indent: -5000px;background-image: url("../images/common/icon/icon_closeX.png");background-repeat: no-repeat;background-position: 50% 50%;}
+.popup_content{padding: 50px 20px;}
+
+#_wrap #_popupHeader{height: 34px;}
+#_wrap #_popupHeader h1{font-size:18px!important;line-height:32px!important;font-weight:bold;border-bottom: 2px solid #333333; width: 100%; color:#454545;}
+#_wrap #_popupHeader h1,body._popup #_wrap #_popupHeader #_articleLocation{float:left}
+#_wrap #_popupHeader #_articleLocation{height:28px}
+#_wrap #_popupHeader #_articleLocation li{float:left;color:#333;font-size:1.3em;margin-left:1em}
+#_wrap #_popupHeader #_articleLocation li i{float:left;width:17px;/*background-image:url(/Web-home/_UI/images/siteMngr/&gt.gif);*/background-repeat:no-repeat;background-position:left 50%;text-indent:-5000px;font-size:0}
+#_wrap #_popupHeader #_articleLocation li._last{color:#d84a38;font-weight:700;font-size:1.4em}
+#_wrap #_articleContent{padding: 30px 20px;}
+#_wrap #_articleContent #_codeFrame{overflow:hidden}
+#_wrap #_articleContent #_codeFrame iframe{width:100%;height:100%}
+#_wrap #_articleContent #_codeEditor{position:relative;overflow:hidden;line-height:1.8}
+#_wrap #_articleContent ._insert textarea{margin-top:8px;}
+#_wrap #_articleContent ._areaButton a{min-width: 88px;}
+#_wrap #_articleContent ._areaButton .blackBtn a{line-height: 38px!important;}
+#_wrap #_articleContent .sch_code{height:560px;min-height:560px; }
+#_wrap #_articleContent .sch_code input[type="checkbox"] + label span {margin-top: 3px!important; margin-right: 4px!important;}
+#_wrap._codeEdit{margin:0}
+#_wrap._codeEdit #_popupHeader{display:none}
+#_wrap._codeEdit #_articleContent ._callEle{width:40px;height:40px;background-size:40px 80px;background-position:0 -40px;right:25px;top:50px}
+#_wrap._codeHtml #_articleContent ._callEle{width:40px;height:40px;background-size:40px 80px;background-position:0 -40px;right:25px;top:50px}
+
+
+.ui-dialog .ui-widget-header{display: none;}
+.ui-widget-overlay{background:#101010;opacity:0.75}
+.alertStyle{border: 2px solid #bfbfbf !important;padding: 30px;min-width: 400px;}
+.pop_alert .alert_txt{text-align:center;font-size:14px;line-height:22px;color:#757575;padding:0 5px 15px;font-weight:bold;}
+.alertBtn{padding-bottom:0;}
+.alertBtn a{min-width: 88px;}
+
